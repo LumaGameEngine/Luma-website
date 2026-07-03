@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luma Engine — CPU-First Game Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        luma: {
+                            bg: '#0B0813',
+                            panel: '#130F22',
+                            border: '#241B3F',
+                            pink: '#FF2A85',
+                            purple: '#A127FF',
+                            textMuted: '#948FAD'
+                        }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'glow': 'glow 3s ease-in-out infinite',
+                        'slide-up': 'slideUp 0.8s ease-out forwards',
+                        'slide-in': 'slideIn 0.6s ease-out forwards',
+                        'pulse-slow': 'pulse 4s ease-in-out infinite',
+                        'shimmer': 'shimmer 3s ease-in-out infinite',
+                        'spin-slow': 'spin 20s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        glow: {
+                            '0%, 100%': { opacity: '0.6' },
+                            '50%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(40px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        slideIn: {
+                            '0%': { opacity: '0', transform: 'translateX(-30px)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' },
+                        },
+                        shimmer: {
+                            '0%, 100%': { backgroundPosition: '0% 50%' },
+                            '50%': { backgroundPosition: '100% 50%' },
+                        },
+                    },
+                    boxShadow: {
+                        'neon-pink': '0 0 30px rgba(255, 42, 133, 0.15), 0 0 60px rgba(255, 42, 133, 0.05)',
+                        'neon-purple': '0 0 30px rgba(161, 39, 255, 0.15), 0 0 60px rgba(161, 39, 255, 0.05)',
+                        'glow': '0 0 40px rgba(255, 42, 133, 0.1), 0 0 80px rgba(161, 39, 255, 0.05)',
+                        'card': '0 8px 32px rgba(0, 0, 0, 0.4)',
+                        'card-hover': '0 12px 48px rgba(255, 42, 133, 0.1), 0 8px 32px rgba(0, 0, 0, 0.4)',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0B0813;
+            color: #F3F1F9;
+            overflow-x: hidden;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B0813;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #FF2A85, #A127FF);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FF2A85;
+        }
+
+        .glass {
+            background: rgba(19, 15, 34, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(36, 27, 63, 0.3);
+        }
+        
+        .glass-light {
+            background: rgba(19, 15, 34, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(36, 27, 63, 0.2);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #FF2A85 0%, #A127FF 50%, #FF2A85 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 4s ease-in-out infinite;
+        }
+
+        .gradient-text-static {
+            background: linear-gradient(135deg, #FF2A85 0%, #A127FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 12px 48px rgba(255, 42, 133, 0.15), 0 8px 32px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 42, 133, 0.3);
+        }
+
+        .btn-glow {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .btn-glow::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 42, 133, 0.1), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.6s ease;
+            pointer-events: none;
+        }
+        .btn-glow:hover::before {
+            opacity: 1;
+        }
+
+        .terminal-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background: #FF2A85;
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .logo-pulse {
+            animation: logoPulse 3s ease-in-out infinite;
+        }
+        @keyframes logoPulse {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 42, 133, 0.2)); }
+            50% { filter: drop-shadow(0 0 40px rgba(255, 42, 133, 0.4)); }
+        }
+
+        .section-fade {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .section-fade.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .glow-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            opacity: 0.15;
+        }
+
+        .donation-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(to right, #FF2A85, #A127FF);
+            outline: none;
+            transition: opacity 0.2s;
+        }
+        .donation-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF2A85, #A127FF);
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 42, 133, 0.4);
+            transition: all 0.2s;
+        }
+        .donation-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 40px rgba(255, 42, 133, 0.6);
+        }
+        .donation-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF2A85, #A127FF);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 20px rgba(255, 42, 133, 0.4);
+        }
+
+        .donation-amount {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #FF2A85, #A127FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @media (max-width: 640px) {
+            .hero-title {
+                font-size: 2.5rem !important;
+            }
+        }
+    </style>
+</head>
+<body class="font-sans antialiased overflow-x-hidden">
+
+    <!-- Background Orbs -->
+    <div class="glow-orb w-[600px] h-[600px] bg-luma-pink/20 -top-40 -left-40"></div>
+    <div class="glow-orb w-[400px] h-[400px] bg-luma-purple/20 bottom-0 right-0"></div>
+    <div class="glow-orb w-[300px] h-[300px] bg-blue-500/10 top-1/2 left-1/2 -translate-x-1/2"></div>
+
+    <!-- ===================================================== -->
+    <!-- NAVIGATION -->
+    <!-- ===================================================== -->
+    
+    <nav class="fixed top-0 left-0 w-full z-50 glass border-b border-luma-border/30 px-6 py-3 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <a href="#" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-luma-pink to-luma-purple flex items-center justify-center font-bold text-sm tracking-wider text-white shadow-neon-pink logo-pulse">
+                    <span class="relative z-10">L</span>
+                </div>
+                <span class="font-bold text-xl tracking-tight text-white group-hover:text-luma-pink transition-all duration-300">
+                    Luma<span class="font-medium text-luma-textMuted">Engine</span>
+                </span>
+            </a>
+            
+            <div class="hidden lg:flex items-center gap-8 text-sm font-medium text-luma-textMuted">
+                <a href="#vision" class="hover:text-white transition-all duration-300 relative group">
+                    Vision
+                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-luma-pink to-luma-purple transition-all duration-300 group-hover:w-full"></span>
+                </a>
+                <a href="#dimension-l" class="hover:text-white transition-all duration-300 relative group">
+                    Dimension_L
+                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-luma-pink to-luma-purple transition-all duration-300 group-hover:w-full"></span>
+                </a>
+                <a href="#architecture" class="hover:text-white transition-all duration-300 relative group">
+                    Architecture
+                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-luma-pink to-luma-purple transition-all duration-300 group-hover:w-full"></span>
+                </a>
+                <a href="#love-lang" class="hover:text-white transition-all duration-300 relative group">
+                    LOVE Lang
+                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-luma-pink to-luma-purple transition-all duration-300 group-hover:w-full"></span>
+                </a>
+                <a href="#building" class="hover:text-white transition-all duration-300 relative group">
+                    Build
+                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-luma-pink to-luma-purple transition-all duration-300 group-hover:w-full"></span>
+                </a>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <a href="https://github.com/LumaGameEngine/Luma_Engine" target="_blank" class="text-luma-textMuted hover:text-white text-xl transition-all duration-300 hover:scale-110">
+                    <i class="fab fa-github"></i>
+                </a>
+                <a href="#donate" class="hidden sm:inline-block bg-gradient-to-r from-luma-pink to-luma-purple text-white font-semibold text-xs tracking-wider uppercase px-4 py-2.5 rounded-lg shadow-neon-pink hover:shadow-neon-pink/50 transition-all duration-300 hover:scale-105 btn-glow">
+                    <i class="fas fa-heart mr-2"></i> Donate
+                </a>
+                <a href="#building" class="hidden sm:inline-block border border-luma-border hover:border-luma-pink/50 text-white font-semibold text-xs tracking-wider uppercase px-4 py-2.5 rounded-lg transition-all duration-300 hover:scale-105">
+                    <i class="fas fa-terminal mr-2"></i> Build
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ===================================================== -->
+    <!-- HERO SECTION -->
+    <!-- ===================================================== -->
+    
+    <section class="relative pt-32 pb-24 md:pt-44 md:pb-36 px-6 max-w-7xl mx-auto flex flex-col items-center text-center overflow-hidden">
+        
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-luma-pink/20 text-xs font-semibold tracking-wide text-luma-pink uppercase mb-6 animate-slide-up">
+            <span class="flex h-2 w-2 relative">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-luma-pink opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-luma-pink"></span>
+            </span>
+            Open Source • C++20 • MIT License
+        </div>
+
+        <h1 class="hero-title text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight max-w-5xl leading-[1.1] mb-8 animate-slide-up" style="animation-delay: 0.1s;">
+            CPU-First. <span class="gradient-text">No Bloat.</span>
+        </h1>
+        
+        <p class="text-base sm:text-xl text-luma-textMuted max-w-2xl font-normal leading-relaxed mb-12 animate-slide-up" style="animation-delay: 0.2s;">
+            A high-performance game engine built from the ground up. No GPU required. Just clean, efficient C++20 and a vision for better software.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 mb-16 w-full sm:w-auto animate-slide-up" style="animation-delay: 0.3s;">
+            <a href="#building" class="bg-gradient-to-r from-luma-pink to-luma-purple text-white px-10 py-4 rounded-xl font-bold text-sm tracking-wide shadow-neon-purple hover:shadow-neon-purple/50 transition-all duration-300 hover:scale-105 btn-glow text-center">
+                <i class="fas fa-terminal mr-2"></i> Build It
+            </a>
+            <a href="https://github.com/LumaGameEngine/Luma_Engine" target="_blank" class="glass border border-luma-border hover:border-luma-pink/50 text-white px-10 py-4 rounded-xl font-bold text-sm tracking-wide transition-all duration-300 hover:scale-105 hover:bg-luma-panel/80 text-center">
+                <i class="fab fa-github mr-2"></i> View Source
+            </a>
+        </div>
+
+        <!-- Terminal -->
+        <div class="w-full max-w-5xl glass rounded-2xl shadow-glow overflow-hidden text-left relative animate-slide-up" style="animation-delay: 0.4s;">
+            <div class="bg-luma-bg/50 px-4 py-3 border-b border-luma-border/50 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-[#FF5F56] hover:bg-[#FF5F56]/80 transition-colors cursor-pointer"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#FFBD2E] hover:bg-[#FFBD2E]/80 transition-colors cursor-pointer"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#27C93F] hover:bg-[#27C93F]/80 transition-colors cursor-pointer"></div>
+                    <span class="text-xs font-mono text-luma-textMuted ml-3">Luma_Engine — 52.8 FPS</span>
+                </div>
+                <div class="text-xs bg-luma-pink/10 border border-luma-pink/20 text-luma-pink font-semibold px-3 py-0.5 rounded-full">v0.1.0-alpha</div>
+            </div>
+            <div class="p-4 sm:p-6 font-mono text-xs sm:text-sm text-emerald-400 bg-luma-bg/30 space-y-1.5">
+                <p class="text-luma-textMuted opacity-60">[04-Jul-2026 09:42:17] Initializing core systems...</p>
+                <p class="text-purple-400 opacity-90">[INFO] SDL3 window subsystem initialized.</p>
+                <p class="text-purple-400 opacity-90">[INFO] ImGui pipeline ready.</p>
+                <p class="text-luma-pink opacity-90">[INFO] Luma Engine core active.</p>
+                <p class="text-blue-400 opacity-90">[INFO] Project workspace: ~/LumaProjects/demo</p>
+                <p class="text-yellow-500 opacity-90">[ASSET] Registry: 0 assets loaded.</p>
+                <p class="text-white mt-4 flex items-center gap-1">
+                    > ready. awaiting input.
+                    <span class="terminal-cursor"></span>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <hr class="border-luma-border/30 max-w-7xl mx-auto px-6">
+
+    <!-- ===================================================== -->
+    <!-- VISION SECTION -->
+    <!-- ===================================================== -->
+    
+    <section id="vision" class="py-24 px-6 max-w-7xl mx-auto section-fade">
+        <div class="grid md:grid-cols-12 gap-12 items-center">
+            <div class="md:col-span-5 space-y-6">
+                <div class="inline-block text-xs font-bold tracking-wider uppercase text-luma-pink bg-luma-pink/5 border border-luma-pink/10 px-4 py-1.5 rounded-full">The Manifesto</div>
+                <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                    Software Design <span class="gradient-text-static">Over Hardware Bloat</span>
+                </h2>
+                <p class="text-luma-textMuted leading-relaxed text-base">
+                    Most engines assume infinite hardware. We assume you have a brain. Luma Engine is built for developers who understand that great software is crafted, not compiled into existence.
+                </p>
+                <blockquote class="border-l-4 border-luma-pink pl-6 italic text-luma-textMuted text-base my-6 bg-luma-panel/30 py-4 pr-4 rounded-r-lg">
+                    "Great software isn't built by demanding faster hardware. Great software is built by making better use of the hardware we already have."
+                </blockquote>
+                <div class="flex items-center gap-3 text-sm text-luma-textMuted">
+                    <img src="signature.png" alt="Signature" class="h-10 opacity-60 hover:opacity-100 transition-opacity cursor-pointer">
+                    <span class="text-xs">— Princeflouz, Lead Architect</span>
+                </div>
+                <div class="flex gap-4 pt-2">
+                    <a href="https://twitter.com/Princeflouz" target="_blank" class="text-luma-textMuted hover:text-white transition-colors text-sm">
+                        <i class="fab fa-twitter mr-1"></i> @Princeflouz
+                    </a>
+                    <a href="https://discord.gg/ZJBRq54pC" target="_blank" class="text-luma-textMuted hover:text-white transition-colors text-sm">
+                        <i class="fab fa-discord mr-1"></i> Discord
+                    </a>
+                </div>
+            </div>
+            
+            <div class="md:col-span-7 grid sm:grid-cols-2 gap-4">
+                <div class="p-6 glass rounded-2xl card-hover border border-luma-border/20">
+                    <div class="w-12 h-12 rounded-2xl bg-luma-pink/10 flex items-center justify-center text-luma-pink text-xl mb-4">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <h3 class="font-bold text-white text-lg mb-2">Cache-First</h3>
+                    <p class="text-sm text-luma-textMuted leading-relaxed">Data structures optimized for L1/L2 cache hits. No stutter.</p>
+                </div>
+                
+                <div class="p-6 glass rounded-2xl card-hover border border-luma-border/20">
+                    <div class="w-12 h-12 rounded-2xl bg-luma-purple/10 flex items-center justify-center text-luma-purple text-xl mb-4">
+                        <i class="fas fa-cubes"></i>
+                    </div>
+                    <h3 class="font-bold text-white text-lg mb-2">Data-Oriented ECS</h3>
+                    <p class="text-sm text-luma-textMuted leading-relaxed">Hybrid entity-component system. Performance predictable.</p>
+                </div>
+                
+                <div class="p-6 glass rounded-2xl card-hover border border-luma-border/20">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400 text-xl mb-4">
+                        <i class="fas fa-memory"></i>
+                    </div>
+                    <h3 class="font-bold text-white text-lg mb-2">Custom Allocators</h3>
+                    <p class="text-sm text-luma-textMuted leading-relaxed">No dynamic allocation during gameplay. Deterministic performance.</p>
+                </div>
+                
+                <div class="p-6 glass rounded-2xl card-hover border border-luma-border/20">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 text-xl mb-4">
+                        <i class="fas fa-folder-tree"></i>
+                    </div>
+                    <h3 class="font-bold text-white text-lg mb-2">UUID-Based Assets</h3>
+                    <p class="text-sm text-luma-textMuted leading-relaxed">128-bit UUIDs for every asset. Rename without breaking references.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <!-- DIMENSION_L SECTION -->
+    <!-- ===================================================== -->
+    
+    <section id="dimension-l" class="py-24 glass border-y border-luma-border/30 px-6 section-fade">
+        <div class="max-w-7xl mx-auto text-center space-y-4 mb-20">
+            <div class="inline-block text-xs font-bold tracking-wider uppercase text-luma-purple bg-luma-purple/5 border border-luma-purple/10 px-4 py-1.5 rounded-full">Core Rendering</div>
+            <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">Dimension_L <span class="gradient-text-static">DL-V1</span></h2>
+            <p class="text-luma-textMuted max-w-3xl mx-auto text-sm sm:text-base leading-relaxed">
+                Render only what matters. Three visual tiers, one goal: efficiency.
+            </p>
+        </div>
+
+        <div class="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
+            <div class="glass border-t-4 border-t-luma-pink border border-luma-border/30 p-8 rounded-2xl shadow-card hover:shadow-card-hover transition-all duration-500 hover:-translate-y-2 relative group">
+                <div class="absolute top-4 right-4 font-mono text-xs text-luma-pink bg-luma-pink/10 px-3 py-1 rounded-full">Tier 1</div>
+                <div class="w-14 h-14 rounded-2xl bg-luma-pink/10 flex items-center justify-center text-luma-pink text-2xl mb-4 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-star"></i>
+                </div>
+                <h3 class="font-bold text-2xl text-white mb-2">Near Layer</h3>
+                <div class="text-xs font-mono text-luma-textMuted mb-6">Status: <span class="text-emerald-400">Full Quality</span></div>
+                <ul class="space-y-3 text-sm text-luma-textMuted">
+                    <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-luma-pink"></span> Full vector pipelines</li>
+                    <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-luma-pink"></span> Per-pixel lighting</li>
+                    <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-luma-pink"></span> Full matrix updates</li>
+                </ul>
+            </div>
+            
+            <div class="glass border-t-4 border-t-luma-purple border border-luma-border/30 p-8 rounded-2xl shadow-card hover:shadow-card-hover transition-all duration-500 hover:-translate-y-2 relative group">
+                <div class="absolute top-4 right-4 font-mono text-xs text-luma-purple bg-luma-purple/10 px-3 py-1 rounded-full">Tier 2</div>
+                <div class="w-14 h-14 rounded-2xl bg-luma-purple/10 flex items-center justify-center text-luma-purple text-2xl mb-4 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <h3 class="font-bold text-2xl text-white mb-2">Mid Layer</h3>
+                <div class="text-xs font-mono text-luma-textMuted mb-6">Status: <span class="text-blue-400">Cached</span></div>
+                <ul class="space-y-3 text-sm text-luma-textMuted">
+                    <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-luma-purple"></span> Interpolated geometry</li>
+                    <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-luma-purple"></span> Pre-rendered buffers</li>
+                    <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-luma-purple"></span> Static layer skipping</li>
+                </ul>
+            </div>
+
+            <div class="glass border-t-4 border-t-blue-500 border border-luma-border/30 p-8 rounded-2xl shadow-card hover:shadow-card-hover transition-all duration-500 hover:-translate-y-2 relative group">
+                <div class="absolute top-4 right-4 font-mono text-xs text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full">Tier 3</div>
+                <div class="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400 text-2xl mb-4 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-mountain"></i>
+                </div>
+                <h3 class="font-bold text-2xl text-white mb-2">Far Layer</h3>
+                <div class="text-xs font-mono text-luma-textMuted mb-6">Status: <span class="text-yellow-500">Proxy</span></div>
+                <ul class="space-y-3 text-sm text-luma-textMuted">
+                    <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span> Flat texture proxies</li>
+                    <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span> No transform overhead</li>
+                    <li class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span> Minimal compute</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="text-center mt-16">
+            <div class="inline-flex items-center gap-2 font-mono text-xs tracking-wider text-luma-pink bg-luma-pink/5 border border-luma-pink/10 px-6 py-3 rounded-full">
+                <i class="fas fa-bullseye"></i>
+                Render what matters. Skip the rest.
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <!-- ARCHITECTURE SECTION -->
+    <!-- ===================================================== -->
+    
+    <section id="architecture" class="py-24 px-6 max-w-7xl mx-auto section-fade">
+        <div class="grid md:grid-cols-2 gap-16">
+            
+            <div class="space-y-6">
+                <div class="inline-block text-xs font-bold tracking-wider uppercase text-luma-pink bg-luma-pink/5 border border-luma-pink/10 px-4 py-1.5 rounded-full">Project Structure</div>
+                <h2 class="text-3xl font-extrabold text-white tracking-tight leading-tight">Clean <span class="gradient-text-static">Module Isolation</span></h2>
+                <p class="text-luma-textMuted text-sm leading-relaxed">
+                    Every subsystem lives in its own directory. No circular dependencies. No header hell.
+                </p>
+                
+                <div class="bg-luma-panel/50 p-6 rounded-2xl border border-luma-border/30 font-mono text-xs text-luma-textMuted space-y-1 shadow-card">
+                    <p class="text-white font-semibold text-sm">engine/</p>
+                    <p>├── <span class="text-luma-pink font-medium">assets/</span> <span class="text-gray-600 text-[11px]">// UUID, Registry, Metadata</span></p>
+                    <p>├── <span class="text-luma-purple font-medium">core/</span> <span class="text-gray-600 text-[11px]">// Window, File, UI</span></p>
+                    <p>├── <span class="text-blue-400 font-medium">editor/</span> <span class="text-gray-600 text-[11px]">// Scene tools</span></p>
+                    <p>├── <span class="text-emerald-400 font-medium">input/</span> <span class="text-gray-600 text-[11px]">// SDL3 input</span></p>
+                    <p>├── <span class="text-yellow-500 font-medium">memory/</span> <span class="text-gray-600 text-[11px]">// Allocators</span></p>
+                    <p>├── <span class="text-rose-400 font-medium">renderer/</span> <span class="text-gray-600 text-[11px]">// Dimension_L</span></p>
+                    <p>├── <span class="text-orange-400 font-medium">scripting/</span> <span class="text-gray-600 text-[11px]">// LOVE compiler</span></p>
+                    <p>└── <span class="text-cyan-400 font-medium">physics/</span> <span class="text-gray-600 text-[11px]">// Collision</span></p>
+                </div>
+                
+                <div class="flex items-center gap-4 pt-2">
+                    <img src="signature.png" alt="Signature" class="h-8 opacity-50 hover:opacity-100 transition-opacity cursor-pointer">
+                    <span class="text-xs text-luma-textMuted">v0.1.0 — Stable API</span>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="inline-block text-xs font-bold tracking-wider uppercase text-luma-purple bg-luma-purple/5 border border-luma-purple/10 px-4 py-1.5 rounded-full">Progress</div>
+                <h2 class="text-3xl font-extrabold text-white tracking-tight leading-tight">Development <span class="gradient-text-static">Roadmap</span></h2>
+                
+                <div class="space-y-3">
+                    <div class="p-5 glass rounded-2xl border border-emerald-500/20 flex items-center justify-between card-hover">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xs"><i class="fas fa-check"></i></span>
+                            <span class="text-sm font-semibold text-white">Phase 1: Core & Window</span>
+                        </div>
+                        <span class="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full">Done</span>
+                    </div>
+
+                    <div class="p-5 glass rounded-2xl border border-luma-pink/20 flex items-center justify-between card-hover">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-full bg-luma-pink/10 border border-luma-pink/30 flex items-center justify-center text-luma-pink text-xs animate-spin"><i class="fas fa-spinner"></i></span>
+                            <span class="text-sm font-semibold text-white">Phase 2: Asset Pipeline</span>
+                        </div>
+                        <span class="text-xs font-mono text-luma-pink bg-luma-pink/10 px-3 py-1 rounded-full animate-pulse-slow">Active</span>
+                    </div>
+
+                    <div class="p-5 glass rounded-2xl border border-luma-border/20 flex items-center justify-between opacity-70 card-hover">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-full bg-luma-border/50 border border-luma-border/30 flex items-center justify-center text-luma-textMuted text-xs"><i class="fas fa-lock"></i></span>
+                            <span class="text-sm font-semibold text-white">Phase 3: Software Renderer</span>
+                        </div>
+                        <span class="text-xs font-mono text-luma-textMuted bg-luma-bg/50 px-3 py-1 rounded-full">Up Next</span>
+                    </div>
+
+                    <div class="p-5 glass rounded-2xl border border-luma-border/20 flex items-center justify-between opacity-70 card-hover">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-full bg-luma-border/50 border border-luma-border/30 flex items-center justify-center text-luma-textMuted text-xs"><i class="fas fa-lock"></i></span>
+                            <span class="text-sm font-semibold text-white">Phase 4: LOVE Compiler</span>
+                        </div>
+                        <span class="text-xs font-mono text-luma-textMuted bg-luma-bg/50 px-3 py-1 rounded-full">Planned</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <!-- LOVE LANGUAGE SECTION -->
+    <!-- ===================================================== -->
+    
+    <section id="love-lang" class="py-24 glass border-t border-luma-border/30 px-6 section-fade">
+        <div class="max-w-7xl mx-auto grid md:grid-cols-12 gap-12 items-center">
+            <div class="md:col-span-5 space-y-6">
+                <div class="inline-block text-xs font-bold tracking-wider uppercase text-luma-pink bg-luma-pink/5 border border-luma-pink/10 px-4 py-1.5 rounded-full">Game Logic</div>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">The <span class="gradient-text-static">LOVE</span> Language</h2>
+                <p class="text-luma-textMuted text-sm leading-relaxed">
+                    A lightweight, sandboxed scripting language for gameplay logic. LOVE handles dynamic updates without exposing core engine memory.
+                </p>
+                <div class="space-y-4">
+                    <div class="flex items-start gap-4 p-4 glass rounded-xl border border-luma-border/20">
+                        <i class="fas fa-shield-halved text-luma-pink mt-1 text-lg"></i>
+                        <div>
+                            <h4 class="text-sm font-bold text-white">Sandboxed</h4>
+                            <p class="text-xs text-luma-textMuted mt-0.5">Gameplay runs in isolated scopes. Safe and secure.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4 p-4 glass rounded-xl border border-luma-border/20">
+                        <i class="fas fa-bolt text-luma-purple mt-1 text-lg"></i>
+                        <div>
+                            <h4 class="text-sm font-bold text-white">Fast</h4>
+                            <p class="text-xs text-luma-textMuted mt-0.5">Tokens resolve through sequential memory. Predictable performance.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4 p-4 glass rounded-xl border border-luma-border/20">
+                        <i class="fas fa-code text-emerald-400 mt-1 text-lg"></i>
+                        <div>
+                            <h4 class="text-sm font-bold text-white">Familiar</h4>
+                            <p class="text-xs text-luma-textMuted mt-0.5">Feels natural for Lua, Python, and JavaScript developers.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="md:col-span-7 w-full glass rounded-2xl shadow-glow overflow-hidden font-mono text-sm border border-luma-border/30">
+                <div class="bg-luma-bg/50 px-4 py-3 border-b border-luma-border/30 flex items-center justify-between text-xs text-luma-textMuted">
+                    <span><i class="fas fa-file-code mr-2 text-luma-pink"></i> player.love</span>
+                    <span class="text-luma-pink font-semibold bg-luma-pink/10 px-3 py-0.5 rounded-full">Syntax Preview</span>
+                </div>
+                <div class="p-6 text-luma-textMuted space-y-1 overflow-x-auto">
+                    <p><span class="text-luma-pink font-semibold">entity</span> <span class="text-white font-semibold">Player</span> {</p>
+                    <p class="pl-4"><span class="text-white">position</span> = <span class="text-yellow-400">(0, 0)</span></p>
+                    <p class="pl-4"><span class="text-white">health</span> = <span class="text-yellow-400">100</span></p>
+                    <br>
+                    <p class="pl-4"><span class="text-luma-purple font-semibold">on_update</span>(dt) {</p>
+                    <p class="pl-8"><span class="text-luma-pink font-semibold">if</span> <span class="text-blue-400">key</span>(<span class="text-emerald-400">"W"</span>) {</p>
+                    <p class="pl-12"><span class="text-white">position.y</span> -= <span class="text-yellow-400">1</span></p>
+                    <p class="pl-8">}</p>
+                    <p class="pl-8"><span class="text-luma-pink font-semibold">if</span> <span class="text-blue-400">key</span>(<span class="text-emerald-400">"A"</span>) {</p>
+                    <p class="pl-12"><span class="text-white">position.x</span> -= <span class="text-yellow-400">1</span></p>
+                    <p class="pl-8">}</p>
+                    <p class="pl-4">}</p>
+                    <br>
+                    <p class="pl-4"><span class="text-luma-purple font-semibold">on_draw</span>() {</p>
+                    <p class="pl-8"><span class="text-blue-400">draw_sprite</span>(<span class="text-emerald-400">"player.png"</span>, <span class="text-white">position</span>)</p>
+                    <p class="pl-4">}</p>
+                    <p>}</p>
+                    <p class="mt-4 text-luma-textMuted/40 text-[10px]">// LOVE — compiled to native C++ bytecode</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <!-- BUILD GUIDE SECTION -->
+    <!-- ===================================================== -->
+    
+    <section id="building" class="py-24 px-6 max-w-4xl mx-auto text-center space-y-10 section-fade">
+        <div class="space-y-4">
+            <div class="inline-block text-xs font-bold tracking-wider uppercase text-luma-purple bg-luma-purple/5 border border-luma-purple/10 px-4 py-1.5 rounded-full">Build System</div>
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Compile <span class="gradient-text-static">From Source</span></h2>
+            <p class="text-luma-textMuted text-sm max-w-xl mx-auto leading-relaxed">
+                Build the engine in four simple steps. Single-core compilation prevents resource contention.
+            </p>
+        </div>
+
+        <div class="glass rounded-2xl shadow-glow overflow-hidden text-left border border-luma-border/30">
+            <div class="bg-luma-bg/50 px-6 py-4 border-b border-luma-border/30 flex items-center gap-3 text-xs font-mono text-luma-textMuted">
+                <i class="fas fa-terminal text-luma-pink"></i>
+                <span>Terminal Build Guide</span>
+                <span class="ml-auto text-luma-textMuted/40">— v0.1.0</span>
+            </div>
+            
+            <div class="p-6 sm:p-8 font-mono text-xs sm:text-sm space-y-8">
+                <div>
+                    <div class="text-white font-semibold mb-3 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-luma-pink/10 border border-luma-pink/20 flex items-center justify-center text-luma-pink text-[10px]">1</span>
+                        Install Prerequisites <span class="text-xs font-normal text-luma-textMuted">(Ubuntu/Debian)</span>
+                    </div>
+                    <div class="bg-luma-bg/80 p-4 rounded-xl border border-luma-border/30 text-luma-pink hover:border-luma-pink/30 transition-all">
+                        <code>sudo apt install build-essential cmake git libsdl3-dev</code>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="text-white font-semibold mb-3 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-luma-purple/10 border border-luma-purple/20 flex items-center justify-center text-luma-purple text-[10px]">2</span>
+                        Clone Repository
+                    </div>
+                    <div class="bg-luma-bg/80 p-4 rounded-xl border border-luma-border/30 text-luma-purple hover:border-luma-purple/30 transition-all">
+                        <code>git clone https://github.com/LumaGameEngine/Luma_Engine.git</code><br>
+                        <code class="text-luma-textMuted">cd Luma_Engine</code>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="text-white font-semibold mb-3 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-[10px]">3</span>
+                        Configure Build
+                    </div>
+                    <div class="bg-luma-bg/80 p-4 rounded-xl border border-luma-border/30 text-blue-400 hover:border-blue-400/30 transition-all">
+                        <code>mkdir build && cd build</code><br>
+                        <code>cmake ..</code>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="text-white font-semibold mb-3 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-[10px]">4</span>
+                        Build
+                    </div>
+                    <div class="bg-luma-bg/80 p-4 rounded-xl border border-luma-border/30 text-emerald-400 hover:border-emerald-400/30 transition-all">
+                        <code>make -j1</code>
+                    </div>
+                </div>
+                
+                <div class="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 text-center text-emerald-400/70 text-xs">
+                    <i class="fas fa-check-circle text-emerald-400 mr-2"></i>
+                    Build complete! Run <code class="text-emerald-300">./build/Luma_Engine</code>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-xs text-luma-textMuted italic bg-luma-panel/30 p-4 rounded-xl border border-luma-border/20 max-w-2xl mx-auto">
+            <i class="fas fa-info-circle text-luma-pink mr-2"></i>
+            <code class="text-luma-pink bg-luma-pink/10 px-2 py-0.5 rounded">-j1</code> prevents resource contention during build.
+        </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <!-- DONATION SECTION -->
+    <!-- ===================================================== -->
+    
+    <section id="donate" class="py-24 px-6 max-w-2xl mx-auto section-fade">
+        <div class="text-center space-y-6">
+            <div class="inline-block text-xs font-bold tracking-wider uppercase text-luma-pink bg-luma-pink/5 border border-luma-pink/10 px-4 py-1.5 rounded-full">Support the Project</div>
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                Fuel <span class="gradient-text-static">Open Source</span>
+            </h2>
+            <p class="text-luma-textMuted text-sm max-w-xl mx-auto leading-relaxed">
+                Your support keeps Luma Engine alive. Every contribution helps fund development, server costs, and caffeine.
+            </p>
+        </div>
+
+        <div class="glass rounded-2xl p-8 border border-luma-border/30 shadow-glow mt-8">
+            <div class="text-center mb-6">
+                <div class="donation-amount" id="donationDisplay">$10.00</div>
+                <div class="text-xs text-luma-textMuted mt-1">USD / EUR</div>
+            </div>
+            
+            <input type="range" min="1" max="100" value="10" step="1" 
+                   class="donation-slider w-full" id="donationSlider">
+            
+            <div class="flex justify-between text-xs text-luma-textMuted mt-2">
+                <span>$1</span>
+                <span>$100</span>
+            </div>
+
+            <div class="flex flex-wrap gap-3 justify-center mt-6">
+                <button class="donation-preset px-4 py-2 rounded-lg border border-luma-border/50 text-sm text-luma-textMuted hover:border-luma-pink/50 hover:text-white transition-all" data-amount="5">$5</button>
+                <button class="donation-preset px-4 py-2 rounded-lg border border-luma-pink/30 text-sm text-white bg-luma-pink/10 hover:bg-luma-pink/20 transition-all" data-amount="10">$10</button>
+                <button class="donation-preset px-4 py-2 rounded-lg border border-luma-border/50 text-sm text-luma-textMuted hover:border-luma-pink/50 hover:text-white transition-all" data-amount="25">$25</button>
+                <button class="donation-preset px-4 py-2 rounded-lg border border-luma-border/50 text-sm text-luma-textMuted hover:border-luma-pink/50 hover:text-white transition-all" data-amount="50">$50</button>
+                <button class="donation-preset px-4 py-2 rounded-lg border border-luma-border/50 text-sm text-luma-textMuted hover:border-luma-pink/50 hover:text-white transition-all" data-amount="100">$100</button>
+            </div>
+
+            <div class="mt-6 flex flex-col sm:flex-row gap-4">
+                <a href="#" class="flex-1 bg-gradient-to-r from-luma-pink to-luma-purple text-white text-center font-bold py-3 rounded-xl shadow-neon-pink hover:shadow-neon-pink/50 transition-all duration-300 hover:scale-[1.02] btn-glow">
+                    <i class="fab fa-paypal mr-2"></i> PayPal
+                </a>
+                <a href="#" class="flex-1 bg-luma-panel border border-luma-border hover:border-luma-pink/50 text-white text-center font-bold py-3 rounded-xl transition-all duration-300 hover:scale-[1.02]">
+                    <i class="fab fa-github mr-2"></i> GitHub Sponsors
+                </a>
+            </div>
+
+            <div class="text-center mt-6 text-xs text-luma-textMuted/50">
+                <i class="fas fa-lock mr-1 text-luma-pink"></i> Secure transactions powered by Stripe
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <!-- FOOTER -->
+    <!-- ===================================================== -->
+    
+    <footer class="border-t border-luma-border/30 bg-luma-bg/50 py-12 px-6 text-center text-sm text-luma-textMuted">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-4">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-luma-pink to-luma-purple flex items-center justify-center font-bold text-xs text-white shadow-neon-pink">
+                    L
+                </div>
+                <span class="font-bold text-white text-base">Luma Engine</span>
+                <span class="text-luma-textMuted/30">•</span>
+                <span>MIT License</span>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <span>Built with <i class="fas fa-heart text-luma-pink animate-pulse"></i> by</span>
+                <a href="https://twitter.com/Princeflouz" target="_blank" class="text-white font-medium hover:text-luma-pink transition-colors">Princeflouz</a>
+            </div>
+            
+            <div class="flex gap-4 text-base">
+                <a href="https://github.com/LumaGameEngine" target="_blank" class="text-luma-textMuted hover:text-white transition-all duration-300 hover:scale-110">
+                    <i class="fab fa-github"></i>
+                </a>
+                <a href="https://twitter.com/Princeflouz" target="_blank" class="text-luma-textMuted hover:text-white transition-all duration-300 hover:scale-110">
+                    <i class="fab fa-twitter"></i>
+                </a>
+                <a href="https://discord.gg/ZJBRq54pC" target="_blank" class="text-luma-textMuted hover:text-white transition-all duration-300 hover:scale-110">
+                    <i class="fab fa-discord"></i>
+                </a>
+            </div>
+        </div>
+        <div class="mt-6 text-xs text-luma-textMuted/30">
+            <span class="inline-flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                v0.1.0-alpha • Built with ❤️ and ☕
+            </span>
+        </div>
+    </footer>
+
+    <!-- ===================================================== -->
+    <!-- SCRIPTS -->
+    <!-- ===================================================== -->
+    
+    <script>
+        // Intersection Observer
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = document.querySelectorAll('.section-fade');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+            sections.forEach(section => observer.observe(section));
+            
+            // Navbar
+            const navbar = document.getElementById('navbar');
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 50) {
+                    navbar.classList.add('bg-luma-bg/95');
+                    navbar.classList.remove('glass');
+                } else {
+                    navbar.classList.remove('bg-luma-bg/95');
+                    navbar.classList.add('glass');
+                }
+            });
+        });
+
+        // Donation Slider
+        const slider = document.getElementById('donationSlider');
+        const display = document.getElementById('donationDisplay');
+        
+        slider.addEventListener('input', function() {
+            const val = parseInt(this.value);
+            display.textContent = '$' + val + '.00';
+        });
+
+        // Donation Presets
+        document.querySelectorAll('.donation-preset').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const amount = parseInt(this.dataset.amount);
+                slider.value = amount;
+                display.textContent = '$' + amount + '.00';
+                
+                // Highlight active
+                document.querySelectorAll('.donation-preset').forEach(b => {
+                    b.classList.remove('border-luma-pink/30', 'bg-luma-pink/10', 'text-white');
+                    b.classList.add('border-luma-border/50', 'text-luma-textMuted');
+                });
+                this.classList.remove('border-luma-border/50', 'text-luma-textMuted');
+                this.classList.add('border-luma-pink/30', 'bg-luma-pink/10', 'text-white');
+            });
+        });
+    </script>
+
+</body>
+</html>
