@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOVE Language — Luma Engine Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        luma: {
+                            bg: '#0B0813',
+                            panel: '#130F22',
+                            border: '#241B3F',
+                            pink: '#FF2A85',
+                            purple: '#A127FF',
+                            textMuted: '#948FAD'
+                        }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'glow': 'glow 3s ease-in-out infinite',
+                        'slide-up': 'slideUp 0.8s ease-out forwards',
+                        'shimmer': 'shimmer 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        glow: {
+                            '0%, 100%': { opacity: '0.6' },
+                            '50%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(40px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        shimmer: {
+                            '0%, 100%': { backgroundPosition: '0% 50%' },
+                            '50%': { backgroundPosition: '100% 50%' },
+                        },
+                    },
+                    boxShadow: {
+                        'neon-pink': '0 0 30px rgba(255, 42, 133, 0.15), 0 0 60px rgba(255, 42, 133, 0.05)',
+                        'neon-purple': '0 0 30px rgba(161, 39, 255, 0.15), 0 0 60px rgba(161, 39, 255, 0.05)',
+                        'glow': '0 0 40px rgba(255, 42, 133, 0.1), 0 0 80px rgba(161, 39, 255, 0.05)',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0B0813;
+            color: #F3F1F9;
+            overflow-x: hidden;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B0813;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #FF2A85, #A127FF);
+            border-radius: 4px;
+        }
+
+        .glass {
+            background: rgba(19, 15, 34, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(36, 27, 63, 0.3);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #FF2A85 0%, #A127FF 50%, #FF2A85 100%);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 4s ease-in-out infinite;
+        }
+
+        .gradient-text-static {
+            background: linear-gradient(135deg, #FF2A85 0%, #A127FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-glow {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .btn-glow::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 42, 133, 0.1), transparent 70%);
+            opacity: 0;
+            transition: opacity 0.6s ease;
+            pointer-events: none;
+        }
+        .btn-glow:hover::before {
+            opacity: 1;
+        }
+
+        .logo-pulse {
+            animation: logoPulse 3s ease-in-out infinite;
+        }
+        @keyframes logoPulse {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 42, 133, 0.2)); }
+            50% { filter: drop-shadow(0 0 40px rgba(255, 42, 133, 0.4)); }
+        }
+
+        .section-fade {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .section-fade.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .glow-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            opacity: 0.15;
+        }
+
+        .doc-toc {
+            position: sticky;
+            top: 80px;
+        }
+        .doc-toc a {
+            display: block;
+            padding: 4px 12px;
+            border-left: 2px solid transparent;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+            color: #948FAD;
+        }
+        .doc-toc a:hover {
+            color: white;
+            border-left-color: #FF2A85;
+            padding-left: 16px;
+        }
+        .doc-toc a.active {
+            color: white;
+            border-left-color: #FF2A85;
+        }
+
+        .doc-code {
+            background: #0B0813;
+            border: 1px solid rgba(36, 27, 63, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            color: #4CAF50;
+        }
+        .doc-code .comment {
+            color: #948FAD;
+        }
+        .doc-code .keyword {
+            color: #FF2A85;
+        }
+        .doc-code .string {
+            color: #FFBD2E;
+        }
+        .doc-code .number {
+            color: #A127FF;
+        }
+        .doc-code .function {
+            color: #2196F3;
+        }
+
+        pre {
+            background: #0B0813;
+            border: 1px solid rgba(36, 27, 63, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            overflow-x: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: #4CAF50;
+        }
+
+        @media (max-width: 640px) {
+            .hero-title {
+                font-size: 2.5rem !important;
+            }
+        }
+
+        .page-transition {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="font-sans antialiased overflow-x-hidden">
+
+    <div class="glow-orb w-[600px] h-[600px] bg-luma-pink/20 -top-40 -left-40"></div>
+    <div class="glow-orb w-[400px] h-[400px] bg-luma-purple/20 bottom-0 right-0"></div>
+
+    <!-- ===================================================== -->
+    <!-- NAVIGATION -->
+    <!-- ===================================================== -->
+    
+    <nav class="fixed top-0 left-0 w-full z-50 glass border-b border-luma-border/30 px-6 py-3 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-luma-pink to-luma-purple flex items-center justify-center font-bold text-sm tracking-wider text-white shadow-neon-pink logo-pulse">
+                    <span class="relative z-10">L</span>
+                </div>
+                <span class="font-bold text-xl tracking-tight text-white group-hover:text-luma-pink transition-all duration-300">
+                    Luma<span class="font-medium text-luma-textMuted">Engine</span>
+                </span>
+            </a>
+            
+            <div class="hidden lg:flex items-center gap-8 text-sm font-medium text-luma-textMuted">
+                <a href="index.html#vision" class="hover:text-white transition-all duration-300 relative group">
+                    Vision
+                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-luma-pink to-luma-purple transition-all duration-300 group-hover:w-full"></span>
+                </a>
+                <a href="index.html#dimension-l" class="hover:text-white transition-all duration-300 relative group">
+                    Dimension_L
+                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-luma-pink to-luma-purple transition-all duration-300 group-hover:w-full"></span>
+                </a>
+                <a href="docs.html" class="hover:text-white transition-all duration-300 relative group text-white">
+                    LOVE Docs
+                    <span class="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-luma-pink to-luma-purple"></span>
+                </a>
+                <a href="download.html" class="hover:text-white transition-all duration-300 relative group">
+                    Download
+                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-luma-pink to-luma-purple transition-all duration-300 group-hover:w-full"></span>
+                </a>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <a href="https://github.com/LumaGameEngine/Luma_Engine" target="_blank" class="text-luma-textMuted hover:text-white text-xl transition-all duration-300 hover:scale-110">
+                    <i class="fab fa-github"></i>
+                </a>
+                <a href="index.html#donate" class="hidden sm:inline-block bg-gradient-to-r from-luma-pink to-luma-purple text-white font-semibold text-xs tracking-wider uppercase px-4 py-2.5 rounded-lg shadow-neon-pink hover:shadow-neon-pink/50 transition-all duration-300 hover:scale-105 btn-glow">
+                    <i class="fas fa-heart mr-2"></i> Donate
+                </a>
+                <a href="download.html" class="hidden sm:inline-block border border-luma-border hover:border-luma-pink/50 text-white font-semibold text-xs tracking-wider uppercase px-4 py-2.5 rounded-lg transition-all duration-300 hover:scale-105">
+                    <i class="fas fa-download mr-2"></i> Download
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ===================================================== -->
+    <!-- HERO -->
+    <!-- ===================================================== -->
+    
+    <section class="relative pt-32 pb-16 md:pt-44 md:pb-20 px-6 max-w-7xl mx-auto text-center page-transition">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-luma-pink/20 text-xs font-semibold tracking-wide text-luma-pink uppercase mb-6 animate-slide-up">
+            <i class="fas fa-heart mr-2"></i> LOVE Language
+        </div>
+
+        <h1 class="hero-title text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight max-w-4xl mx-auto leading-[1.1] mb-6 animate-slide-up" style="animation-delay: 0.1s;">
+            The <span class="gradient-text">LOVE</span> Language
+        </h1>
+        
+        <p class="text-base sm:text-lg text-luma-textMuted max-w-2xl mx-auto font-normal leading-relaxed mb-12 animate-slide-up" style="animation-delay: 0.2s;">
+            Lightweight, sandboxed, and designed for game logic. LOVE runs on the Luma Engine VM.
+        </p>
+    </section>
+
+    <!-- ===================================================== -->
+    <!-- DOCUMENTATION CONTENT -->
+    <!-- ===================================================== -->
+    
+    <section class="py-8 pb-24 px-6 max-w-7xl mx-auto">
+        <div class="grid lg:grid-cols-4 gap-8">
+            
+            <!-- Table of Contents -->
+            <div class="lg:col-span-1 hidden lg:block">
+                <div class="doc-toc glass rounded-2xl p-4 border border-luma-border/30">
+                    <h4 class="text-sm font-bold text-white mb-4">Contents</h4>
+                    <a href="#introduction" class="active">Introduction</a>
+                    <a href="#getting-started">Getting Started</a>
+                    <a href="#syntax">Syntax</a>
+                    <a href="#instructions">Instructions</a>
+                    <a href="#data-types">Data Types</a>
+                    <a href="#control-flow">Control Flow</a>
+                    <a href="#functions">Functions</a>
+                    <a href="#examples">Examples</a>
+                    <a href="#quick-reference">Quick Reference</a>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="lg:col-span-3 space-y-12">
+                
+                <!-- Introduction -->
+                <section id="introduction" class="section-fade">
+                    <h2 class="text-3xl font-bold text-white mb-4">Introduction</h2>
+                    <p class="text-luma-textMuted leading-relaxed mb-4">
+                        <strong>LOVE</strong> (Luma Object &amp; Virtual-machine Environment) is a lightweight, sandboxed scripting language designed for the Luma Engine.
+                    </p>
+                    <div class="grid sm:grid-cols-2 gap-4 mt-6">
+                        <div class="glass p-4 rounded-xl border border-luma-border/20">
+                            <i class="fas fa-gem text-luma-pink text-lg mb-2"></i>
+                            <h4 class="text-white font-semibold text-sm">Simple</h4>
+                            <p class="text-xs text-luma-textMuted">Learn it in minutes, not months</p>
+                        </div>
+                        <div class="glass p-4 rounded-xl border border-luma-border/20">
+                            <i class="fas fa-shield-halved text-luma-purple text-lg mb-2"></i>
+                            <h4 class="text-white font-semibold text-sm">Safe</h4>
+                            <p class="text-xs text-luma-textMuted">Sandboxed execution, no engine crashes</p>
+                        </div>
+                        <div class="glass p-4 rounded-xl border border-luma-border/20">
+                            <i class="fas fa-bolt text-emerald-400 text-lg mb-2"></i>
+                            <h4 class="text-white font-semibold text-sm">Fast</h4>
+                            <p class="text-xs text-luma-textMuted">Compiled to bytecode on a lightweight VM</p>
+                        </div>
+                        <div class="glass p-4 rounded-xl border border-luma-border/20">
+                            <i class="fas fa-code text-blue-400 text-lg mb-2"></i>
+                            <h4 class="text-white font-semibold text-sm">Integrated</h4>
+                            <p class="text-xs text-luma-textMuted">Seamless interaction with the Luma Engine</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Getting Started -->
+                <section id="getting-started" class="section-fade">
+                    <h2 class="text-3xl font-bold text-white mb-4">Getting Started</h2>
+                    
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">First Program</h3>
+                    <div class="doc-code">
+                        <span class="keyword">PUSH</span> <span class="number">10</span><br>
+                        <span class="keyword">PUSH</span> <span class="number">20</span><br>
+                        <span class="keyword">ADD</span><br>
+                        <span class="keyword">PRINT</span><br>
+                        <span class="keyword">HALT</span>
+                    </div>
+                    <p class="text-luma-textMuted text-sm mt-2"><span class="text-emerald-400">→</span> Output: <span class="text-white">30</span></p>
+
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Hello World</h3>
+                    <div class="doc-code">
+                        <span class="keyword">PUSH</span> <span class="string">"Hello, World!"</span><br>
+                        <span class="keyword">PRINT</span><br>
+                        <span class="keyword">HALT</span>
+                    </div>
+                    <p class="text-luma-textMuted text-sm mt-2"><span class="text-emerald-400">→</span> Output: <span class="text-white">Hello, World!</span></p>
+                </section>
+
+                <!-- Syntax -->
+                <section id="syntax" class="section-fade">
+                    <h2 class="text-3xl font-bold text-white mb-4">Syntax</h2>
+                    
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Comments</h3>
+                    <div class="doc-code">
+                        <span class="comment">// Single-line comment</span><br>
+                        <span class="comment">/* Multi-line</span><br>
+                        <span class="comment">   comment */</span><br>
+                        <span class="comment"># Alternative single-line comment</span>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Instructions</h3>
+                    <p class="text-luma-textMuted text-sm">Each instruction is written on its own line:</p>
+                    <div class="doc-code mt-2">
+                        <span class="keyword">INSTRUCTION</span> operands
+                    </div>
+                    <p class="text-luma-textMuted text-sm mt-2">Instructions are <span class="text-white">case-insensitive</span> (<span class="text-luma-pink">PUSH</span> = <span class="text-luma-pink">push</span> = <span class="text-luma-pink">Push</span>).</p>
+                </section>
+
+                <!-- Instructions -->
+                <section id="instructions" class="section-fade">
+                    <h2 class="text-3xl font-bold text-white mb-4">Instructions</h2>
+                    
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Stack Operations</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead>
+                                <tr class="border-b border-luma-border/30">
+                                    <th class="py-2 text-luma-pink font-semibold">Instruction</th>
+                                    <th class="py-2 text-luma-pink font-semibold">Description</th>
+                                    <th class="py-2 text-luma-pink font-semibold">Example</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-luma-textMuted">
+                                <tr class="border-b border-luma-border/10">
+                                    <td class="py-2 text-white font-mono text-xs">PUSH</td>
+                                    <td class="py-2">Push a value onto the stack</td>
+                                    <td class="py-2 font-mono text-xs">PUSH 42</td>
+                                </tr>
+                                <tr class="border-b border-luma-border/10">
+                                    <td class="py-2 text-white font-mono text-xs">POP</td>
+                                    <td class="py-2">Remove the top value from the stack</td>
+                                    <td class="py-2 font-mono text-xs">POP</td>
+                                </tr>
+                                <tr class="border-b border-luma-border/10">
+                                    <td class="py-2 text-white font-mono text-xs">DUP</td>
+                                    <td class="py-2">Duplicate the top value</td>
+                                    <td class="py-2 font-mono text-xs">DUP</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 text-white font-mono text-xs">SWAP</td>
+                                    <td class="py-2">Swap the top two values</td>
+                                    <td class="py-2 font-mono text-xs">SWAP</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Arithmetic Operations</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead>
+                                <tr class="border-b border-luma-border/30">
+                                    <th class="py-2 text-luma-pink font-semibold">Instruction</th>
+                                    <th class="py-2 text-luma-pink font-semibold">Description</th>
+                                    <th class="py-2 text-luma-pink font-semibold">Example</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-luma-textMuted">
+                                <tr class="border-b border-luma-border/10">
+                                    <td class="py-2 text-white font-mono text-xs">ADD</td>
+                                    <td class="py-2">Add top two values</td>
+                                    <td class="py-2 font-mono text-xs">PUSH 5 PUSH 3 ADD → 8</td>
+                                </tr>
+                                <tr class="border-b border-luma-border/10">
+                                    <td class="py-2 text-white font-mono text-xs">SUB</td>
+                                    <td class="py-2">Subtract top two values</td>
+                                    <td class="py-2 font-mono text-xs">PUSH 5 PUSH 3 SUB → 2</td>
+                                </tr>
+                                <tr class="border-b border-luma-border/10">
+                                    <td class="py-2 text-white font-mono text-xs">MUL</td>
+                                    <td class="py-2">Multiply top two values</td>
+                                    <td class="py-2 font-mono text-xs">PUSH 5 PUSH 3 MUL → 15</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 text-white font-mono text-xs">DIV</td>
+                                    <td class="py-2">Divide top two values</td>
+                                    <td class="py-2 font-mono text-xs">PUSH 6 PUSH 3 DIV → 2</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">I/O Operations</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead>
+                                <tr class="border-b border-luma-border/30">
+                                    <th class="py-2 text-luma-pink font-semibold">Instruction</th>
+                                    <th class="py-2 text-luma-pink font-semibold">Description</th>
+                                    <th class="py-2 text-luma-pink font-semibold">Example</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-luma-textMuted">
+                                <tr class="border-b border-luma-border/10">
+                                    <td class="py-2 text-white font-mono text-xs">PRINT</td>
+                                    <td class="py-2">Print the top value</td>
+                                    <td class="py-2 font-mono text-xs">PUSH "Hello" PRINT</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 text-white font-mono text-xs">READ</td>
+                                    <td class="py-2">Read input from console</td>
+                                    <td class="py-2 font-mono text-xs">READ</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Data Types -->
+                <section id="data-types" class="section-fade">
+                    <h2 class="text-3xl font-bold text-white mb-4">Data Types</h2>
+                    
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Integers</h3>
+                    <div class="doc-code">
+                        <span class="keyword">PUSH</span> <span class="number">42</span>     <span class="comment">// Decimal</span><br>
+                        <span class="keyword">PUSH</span> <span class="number">0xFF</span>   <span class="comment">// Hexadecimal</span><br>
+                        <span class="keyword">PUSH</span> <span class="number">0b1010</span> <span class="comment">// Binary</span>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Floating-Point Numbers</h3>
+                    <div class="doc-code">
+                        <span class="keyword">PUSH</span> <span class="number">3.14</span><br>
+                        <span class="keyword">PUSH</span> <span class="number">-0.001</span>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Strings</h3>
+                    <div class="doc-code">
+                        <span class="keyword">PUSH</span> <span class="string">"Hello"</span><br>
+                        <span class="keyword">PUSH</span> <span class="string">'World'</span>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Booleans</h3>
+                    <div class="doc-code">
+                        <span class="keyword">PUSH</span> <span class="number">1</span>  <span class="comment">// true</span><br>
+                        <span class="keyword">PUSH</span> <span class="number">0</span>  <span class="comment">// false</span>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Null</h3>
+                    <div class="doc-code">
+                        <span class="keyword">PUSH</span> <span class="keyword">null</span><br>
+                        <span class="keyword">PUSH</span> <span class="keyword">nil</span>  <span class="comment">// Alternative</span>
+                    </div>
+                </section>
+
+                <!-- Control Flow -->
+                <section id="control-flow" class="section-fade">
+                    <h2 class="text-3xl font-bold text-white mb-4">Control Flow</h2>
+                    
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">If Statement</h3>
+                    <div class="doc-code">
+                        <span class="comment">// if condition</span><br>
+                        <span class="keyword">PUSH</span> condition<br>
+                        <span class="keyword">JMP_IF</span> else_label<br>
+                        <span class="keyword">PUSH</span> <span class="string">"Condition is true"</span><br>
+                        <span class="keyword">PRINT</span><br>
+                        <span class="keyword">JMP</span> end_label<br>
+                        <br>
+                        else_label:<br>
+                        <span class="keyword">PUSH</span> <span class="string">"Condition is false"</span><br>
+                        <span class="keyword">PRINT</span><br>
+                        <br>
+                        end_label:<br>
+                        <span class="keyword">HALT</span>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Loop</h3>
+                    <div class="doc-code">
+                        <span class="comment">// While loop</span><br>
+                        <span class="keyword">PUSH</span> <span class="number">0</span>  <span class="comment">// counter</span><br>
+                        <span class="keyword">PUSH</span> <span class="number">10</span> <span class="comment">// max</span><br>
+                        <br>
+                        loop_start:<br>
+                        <span class="keyword">DUP</span>             <span class="comment">// duplicate counter</span><br>
+                        <span class="keyword">DUP</span>             <span class="comment">// duplicate max</span><br>
+                        <span class="keyword">LT</span>              <span class="comment">// counter &lt; max ?</span><br>
+                        <span class="keyword">JMP_IF</span> loop_end<br>
+                        <br>
+                        <span class="comment">// Loop body</span><br>
+                        <span class="keyword">PUSH</span> <span class="string">"Count: "</span><br>
+                        <span class="keyword">DUP</span>             <span class="comment">// duplicate counter</span><br>
+                        <span class="keyword">ADD</span><br>
+                        <span class="keyword">PRINT</span><br>
+                        <br>
+                        <span class="comment">// Increment</span><br>
+                        <span class="keyword">ADD</span> <span class="number">1</span><br>
+                        <span class="keyword">JMP</span> loop_start<br>
+                        <br>
+                        loop_end:<br>
+                        <span class="keyword">POP</span><br>
+                        <span class="keyword">HALT</span>
+                    </div>
+                </section>
+
+                <!-- Functions -->
+                <section id="functions" class="section-fade">
+                    <h2 class="text-3xl font-bold text-white mb-4">Functions</h2>
+                    
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Defining Functions</h3>
+                    <div class="doc-code">
+                        <span class="keyword">FUNC</span> add_two<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">PUSH</span> <span class="number">2</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">ADD</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">RETURN</span><br>
+                        <span class="keyword">ENDFUNC</span><br>
+                        <br>
+                        <span class="comment">// Usage</span><br>
+                        <span class="keyword">PUSH</span> <span class="number">5</span><br>
+                        <span class="keyword">CALL</span> add_two<br>
+                        <span class="keyword">PRINT</span>  <span class="comment">// Output: 7</span><br>
+                        <span class="keyword">HALT</span>
+                    </div>
+                </section>
+
+                <!-- Examples -->
+                <section id="examples" class="section-fade">
+                    <h2 class="text-3xl font-bold text-white mb-4">Examples</h2>
+                    
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">FizzBuzz</h3>
+                    <div class="doc-code">
+                        <span class="keyword">PUSH</span> <span class="number">1</span>  <span class="comment">// i = 1</span><br>
+                        <br>
+                        loop:<br>
+                        <span class="keyword">DUP</span><br>
+                        <span class="keyword">PUSH</span> <span class="number">15</span><br>
+                        <span class="keyword">MOD</span><br>
+                        <span class="keyword">PUSH</span> <span class="number">0</span><br>
+                        <span class="keyword">EQ</span><br>
+                        <span class="keyword">JMP_IF</span> fizzbuzz<br>
+                        <br>
+                        <span class="keyword">DUP</span><br>
+                        <span class="keyword">PUSH</span> <span class="number">3</span><br>
+                        <span class="keyword">MOD</span><br>
+                        <span class="keyword">PUSH</span> <span class="number">0</span><br>
+                        <span class="keyword">EQ</span><br>
+                        <span class="keyword">JMP_IF</span> fizz<br>
+                        <br>
+                        <span class="keyword">DUP</span><br>
+                        <span class="keyword">PUSH</span> <span class="number">5</span><br>
+                        <span class="keyword">MOD</span><br>
+                        <span class="keyword">PUSH</span> <span class="number">0</span><br>
+                        <span class="keyword">EQ</span><br>
+                        <span class="keyword">JMP_IF</span> buzz<br>
+                        <br>
+                        <span class="keyword">DUP</span><br>
+                        <span class="keyword">PRINT</span><br>
+                        <span class="keyword">JMP</span> next<br>
+                        <br>
+                        fizzbuzz:<br>
+                        <span class="keyword">PUSH</span> <span class="string">"FizzBuzz"</span><br>
+                        <span class="keyword">PRINT</span><br>
+                        <span class="keyword">JMP</span> next<br>
+                        <br>
+                        fizz:<br>
+                        <span class="keyword">PUSH</span> <span class="string">"Fizz"</span><br>
+                        <span class="keyword">PRINT</span><br>
+                        <span class="keyword">JMP</span> next<br>
+                        <br>
+                        buzz:<br>
+                        <span class="keyword">PUSH</span> <span class="string">"Buzz"</span><br>
+                        <span class="keyword">PRINT</span><br>
+                        <br>
+                        next:<br>
+                        <span class="keyword">DUP</span><br>
+                        <span class="keyword">PUSH</span> <span class="number">100</span><br>
+                        <span class="keyword">EQ</span><br>
+                        <span class="keyword">JMP_IF</span> end<br>
+                        <span class="keyword">ADD</span> <span class="number">1</span><br>
+                        <span class="keyword">JMP</span> loop<br>
+                        <br>
+                        end:<br>
+                        <span class="keyword">POP</span><br>
+                        <span class="keyword">HALT</span>
+                    </div>
+                </section>
+
+                <!-- Quick Reference -->
+                <section id="quick-reference" class="section-fade">
+                    <h2 class="text-3xl font-bold text-white mb-4">Quick Reference</h2>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="glass p-4 rounded-xl border border-luma-border/20">
+                            <h4 class="text-luma-pink font-semibold text-sm mb-2">Stack Operations</h4>
+                            <code class="text-xs text-luma-textMuted block">PUSH value</code>
+                            <code class="text-xs text-luma-textMuted block">POP</code>
+                            <code class="text-xs text-luma-textMuted block">DUP</code>
+                            <code class="text-xs text-luma-textMuted block">SWAP</code>
+                        </div>
+                        <div class="glass p-4 rounded-xl border border-luma-border/20">
+                            <h4 class="text-luma-purple font-semibold text-sm mb-2">Arithmetic</h4>
+                            <code class="text-xs text-luma-textMuted block">ADD SUB MUL DIV MOD</code>
+                            <code class="text-xs text-luma-textMuted block">NEG</code>
+                        </div>
+                        <div class="glass p-4 rounded-xl border border-luma-border/20">
+                            <h4 class="text-emerald-400 font-semibold text-sm mb-2">Control Flow</h4>
+                            <code class="text-xs text-luma-textMuted block">JMP label</code>
+                            <code class="text-xs text-luma-textMuted block">JMP_IF label</code>
+                            <code class="text-xs text-luma-textMuted block">JMP_IF_NOT label</code>
+                            <code class="text-xs text-luma-textMuted block">HALT</code>
+                        </div>
+                        <div class="glass p-4 rounded-xl border border-luma-border/20">
+                            <h4 class="text-blue-400 font-semibold text-sm mb-2">I/O</h4>
+                            <code class="text-xs text-luma-textMuted block">PRINT</code>
+                            <code class="text-xs text-luma-textMuted block">READ</code>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Back to top -->
+                <div class="text-center pt-8">
+                    <a href="#" class="inline-block text-luma-textMuted hover:text-white text-sm transition-colors">
+                        <i class="fas fa-arrow-up mr-2"></i> Back to top
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <!-- FOOTER -->
+    <!-- ===================================================== -->
+    
+    <footer class="border-t border-luma-border/30 bg-luma-bg/50 py-12 px-6 text-center text-sm text-luma-textMuted">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-4">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-luma-pink to-luma-purple flex items-center justify-center font-bold text-xs text-white shadow-neon-pink">
+                    L
+                </div>
+                <span class="font-bold text-white text-base">Luma Engine</span>
+                <span class="text-luma-textMuted/30">•</span>
+                <span>MIT License</span>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <span>Built with <i class="fas fa-heart text-luma-pink animate-pulse"></i> by</span>
+                <a href="https://twitter.com/Princeflouz" target="_blank" class="text-white font-medium hover:text-luma-pink transition-colors">Princeflouz</a>
+            </div>
+            
+            <div class="flex gap-4 text-base">
+                <a href="https://github.com/LumaGameEngine" target="_blank" class="text-luma-textMuted hover:text-white transition-all duration-300 hover:scale-110">
+                    <i class="fab fa-github"></i>
+                </a>
+                <a href="https://twitter.com/Princeflouz" target="_blank" class="text-luma-textMuted hover:text-white transition-all duration-300 hover:scale-110">
+                    <i class="fab fa-twitter"></i>
+                </a>
+                <a href="https://discord.gg/ZJBRq54pC" target="_blank" class="text-luma-textMuted hover:text-white transition-all duration-300 hover:scale-110">
+                    <i class="fab fa-discord"></i>
+                </a>
+            </div>
+        </div>
+        <div class="mt-6 text-xs text-luma-textMuted/30">
+            <span class="inline-flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                LOVE v1.0.0 • Built with ❤️ and ☕
+            </span>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sections = document.querySelectorAll('.section-fade');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+            sections.forEach(section => observer.observe(section));
+            
+            const navbar = document.getElementById('navbar');
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 50) {
+                    navbar.classList.add('bg-luma-bg/95');
+                    navbar.classList.remove('glass');
+                } else {
+                    navbar.classList.remove('bg-luma-bg/95');
+                    navbar.classList.add('glass');
+                }
+            });
+
+            // TOC highlighting
+            const tocLinks = document.querySelectorAll('.doc-toc a');
+            tocLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    tocLinks.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
