@@ -280,7 +280,7 @@
     
     <section class="relative pt-32 pb-16 md:pt-44 md:pb-20 px-6 max-w-7xl mx-auto text-center page-transition">
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-luma-pink/20 text-xs font-semibold tracking-wide text-luma-pink uppercase mb-6 animate-slide-up">
-            <i class="fas fa-heart mr-2"></i> LOVE Language
+            <i class="fas fa-heart mr-2"></i> LOVE Language v1.0
         </div>
 
         <h1 class="hero-title text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight max-w-4xl mx-auto leading-[1.1] mb-6 animate-slide-up" style="animation-delay: 0.1s;">
@@ -288,7 +288,7 @@
         </h1>
         
         <p class="text-base sm:text-lg text-luma-textMuted max-w-2xl mx-auto font-normal leading-relaxed mb-12 animate-slide-up" style="animation-delay: 0.2s;">
-            Lightweight, sandboxed, and designed for game logic. LOVE runs on the Luma Engine VM.
+            Lightweight, sandboxed, and designed for game logic. LOVE runs on the Luma Engine VM with a runtime loop at 60 FPS.
         </p>
     </section>
 
@@ -305,11 +305,10 @@
                     <h4 class="text-sm font-bold text-white mb-4">Contents</h4>
                     <a href="#introduction" class="active">Introduction</a>
                     <a href="#getting-started">Getting Started</a>
-                    <a href="#syntax">Syntax</a>
-                    <a href="#instructions">Instructions</a>
-                    <a href="#data-types">Data Types</a>
+                    <a href="#variables">Variables</a>
                     <a href="#control-flow">Control Flow</a>
-                    <a href="#functions">Functions</a>
+                    <a href="#input">Input</a>
+                    <a href="#rendering">Rendering</a>
                     <a href="#examples">Examples</a>
                     <a href="#quick-reference">Quick Reference</a>
                 </div>
@@ -322,28 +321,23 @@
                 <section id="introduction" class="section-fade">
                     <h2 class="text-3xl font-bold text-white mb-4">Introduction</h2>
                     <p class="text-luma-textMuted leading-relaxed mb-4">
-                        <strong>LOVE</strong> (Luma Object &amp; Virtual-machine Environment) is a lightweight, sandboxed scripting language designed for the Luma Engine.
+                        <strong>LOVE</strong> (Luma Object &amp; Virtual-machine Environment) is a lightweight, sandboxed scripting language designed for the Luma Engine. It compiles to bytecode and runs on the Luma VM at 60 FPS.
                     </p>
-                    <div class="grid sm:grid-cols-2 gap-4 mt-6">
+                    <div class="grid sm:grid-cols-3 gap-4 mt-6">
                         <div class="glass p-4 rounded-xl border border-luma-border/20">
                             <i class="fas fa-gem text-luma-pink text-lg mb-2"></i>
                             <h4 class="text-white font-semibold text-sm">Simple</h4>
-                            <p class="text-xs text-luma-textMuted">Learn it in minutes, not months</p>
+                            <p class="text-xs text-luma-textMuted">Learn it in minutes</p>
                         </div>
                         <div class="glass p-4 rounded-xl border border-luma-border/20">
                             <i class="fas fa-shield-halved text-luma-purple text-lg mb-2"></i>
                             <h4 class="text-white font-semibold text-sm">Safe</h4>
-                            <p class="text-xs text-luma-textMuted">Sandboxed execution, no engine crashes</p>
+                            <p class="text-xs text-luma-textMuted">Sandboxed execution</p>
                         </div>
                         <div class="glass p-4 rounded-xl border border-luma-border/20">
                             <i class="fas fa-bolt text-emerald-400 text-lg mb-2"></i>
                             <h4 class="text-white font-semibold text-sm">Fast</h4>
-                            <p class="text-xs text-luma-textMuted">Compiled to bytecode on a lightweight VM</p>
-                        </div>
-                        <div class="glass p-4 rounded-xl border border-luma-border/20">
-                            <i class="fas fa-code text-blue-400 text-lg mb-2"></i>
-                            <h4 class="text-white font-semibold text-sm">Integrated</h4>
-                            <p class="text-xs text-luma-textMuted">Seamless interaction with the Luma Engine</p>
+                            <p class="text-xs text-luma-textMuted">60 FPS runtime loop</p>
                         </div>
                     </div>
                 </section>
@@ -352,178 +346,40 @@
                 <section id="getting-started" class="section-fade">
                     <h2 class="text-3xl font-bold text-white mb-4">Getting Started</h2>
                     
-                    <h3 class="text-xl font-bold text-white mt-6 mb-3">First Program</h3>
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Variables</h3>
                     <div class="doc-code">
-                        <span class="keyword">PUSH</span> <span class="number">10</span><br>
-                        <span class="keyword">PUSH</span> <span class="number">20</span><br>
-                        <span class="keyword">ADD</span><br>
-                        <span class="keyword">PRINT</span><br>
-                        <span class="keyword">HALT</span>
+                        <span class="keyword">let</span> <span class="text-white">score</span> <span class="number">0</span><br>
+                        <span class="keyword">let</span> <span class="text-white">x</span> <span class="number">433</span><br>
+                        <span class="keyword">let</span> <span class="text-white">y</span> <span class="number">285</span>
                     </div>
-                    <p class="text-luma-textMuted text-sm mt-2"><span class="text-emerald-400">→</span> Output: <span class="text-white">30</span></p>
 
-                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Hello World</h3>
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Game Loop</h3>
                     <div class="doc-code">
-                        <span class="keyword">PUSH</span> <span class="string">"Hello, World!"</span><br>
-                        <span class="keyword">PRINT</span><br>
-                        <span class="keyword">HALT</span>
-                    </div>
-                    <p class="text-luma-textMuted text-sm mt-2"><span class="text-emerald-400">→</span> Output: <span class="text-white">Hello, World!</span></p>
-                </section>
-
-                <!-- Syntax -->
-                <section id="syntax" class="section-fade">
-                    <h2 class="text-3xl font-bold text-white mb-4">Syntax</h2>
-                    
-                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Comments</h3>
-                    <div class="doc-code">
-                        <span class="comment">// Single-line comment</span><br>
-                        <span class="comment">/* Multi-line</span><br>
-                        <span class="comment">   comment */</span><br>
-                        <span class="comment"># Alternative single-line comment</span>
-                    </div>
-
-                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Instructions</h3>
-                    <p class="text-luma-textMuted text-sm">Each instruction is written on its own line:</p>
-                    <div class="doc-code mt-2">
-                        <span class="keyword">INSTRUCTION</span> operands
-                    </div>
-                    <p class="text-luma-textMuted text-sm mt-2">Instructions are <span class="text-white">case-insensitive</span> (<span class="text-luma-pink">PUSH</span> = <span class="text-luma-pink">push</span> = <span class="text-luma-pink">Push</span>).</p>
-                </section>
-
-                <!-- Instructions -->
-                <section id="instructions" class="section-fade">
-                    <h2 class="text-3xl font-bold text-white mb-4">Instructions</h2>
-                    
-                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Stack Operations</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left">
-                            <thead>
-                                <tr class="border-b border-luma-border/30">
-                                    <th class="py-2 text-luma-pink font-semibold">Instruction</th>
-                                    <th class="py-2 text-luma-pink font-semibold">Description</th>
-                                    <th class="py-2 text-luma-pink font-semibold">Example</th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-luma-textMuted">
-                                <tr class="border-b border-luma-border/10">
-                                    <td class="py-2 text-white font-mono text-xs">PUSH</td>
-                                    <td class="py-2">Push a value onto the stack</td>
-                                    <td class="py-2 font-mono text-xs">PUSH 42</td>
-                                </tr>
-                                <tr class="border-b border-luma-border/10">
-                                    <td class="py-2 text-white font-mono text-xs">POP</td>
-                                    <td class="py-2">Remove the top value from the stack</td>
-                                    <td class="py-2 font-mono text-xs">POP</td>
-                                </tr>
-                                <tr class="border-b border-luma-border/10">
-                                    <td class="py-2 text-white font-mono text-xs">DUP</td>
-                                    <td class="py-2">Duplicate the top value</td>
-                                    <td class="py-2 font-mono text-xs">DUP</td>
-                                </tr>
-                                <tr>
-                                    <td class="py-2 text-white font-mono text-xs">SWAP</td>
-                                    <td class="py-2">Swap the top two values</td>
-                                    <td class="py-2 font-mono text-xs">SWAP</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Arithmetic Operations</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left">
-                            <thead>
-                                <tr class="border-b border-luma-border/30">
-                                    <th class="py-2 text-luma-pink font-semibold">Instruction</th>
-                                    <th class="py-2 text-luma-pink font-semibold">Description</th>
-                                    <th class="py-2 text-luma-pink font-semibold">Example</th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-luma-textMuted">
-                                <tr class="border-b border-luma-border/10">
-                                    <td class="py-2 text-white font-mono text-xs">ADD</td>
-                                    <td class="py-2">Add top two values</td>
-                                    <td class="py-2 font-mono text-xs">PUSH 5 PUSH 3 ADD → 8</td>
-                                </tr>
-                                <tr class="border-b border-luma-border/10">
-                                    <td class="py-2 text-white font-mono text-xs">SUB</td>
-                                    <td class="py-2">Subtract top two values</td>
-                                    <td class="py-2 font-mono text-xs">PUSH 5 PUSH 3 SUB → 2</td>
-                                </tr>
-                                <tr class="border-b border-luma-border/10">
-                                    <td class="py-2 text-white font-mono text-xs">MUL</td>
-                                    <td class="py-2">Multiply top two values</td>
-                                    <td class="py-2 font-mono text-xs">PUSH 5 PUSH 3 MUL → 15</td>
-                                </tr>
-                                <tr>
-                                    <td class="py-2 text-white font-mono text-xs">DIV</td>
-                                    <td class="py-2">Divide top two values</td>
-                                    <td class="py-2 font-mono text-xs">PUSH 6 PUSH 3 DIV → 2</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <h3 class="text-xl font-bold text-white mt-6 mb-3">I/O Operations</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left">
-                            <thead>
-                                <tr class="border-b border-luma-border/30">
-                                    <th class="py-2 text-luma-pink font-semibold">Instruction</th>
-                                    <th class="py-2 text-luma-pink font-semibold">Description</th>
-                                    <th class="py-2 text-luma-pink font-semibold">Example</th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-luma-textMuted">
-                                <tr class="border-b border-luma-border/10">
-                                    <td class="py-2 text-white font-mono text-xs">PRINT</td>
-                                    <td class="py-2">Print the top value</td>
-                                    <td class="py-2 font-mono text-xs">PUSH "Hello" PRINT</td>
-                                </tr>
-                                <tr>
-                                    <td class="py-2 text-white font-mono text-xs">READ</td>
-                                    <td class="py-2">Read input from console</td>
-                                    <td class="py-2 font-mono text-xs">READ</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <span class="keyword">loop</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">color</span> <span class="number">20 20 40</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">clear</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">present</span><br>
+                        <span class="keyword">end</span>
                     </div>
                 </section>
 
-                <!-- Data Types -->
-                <section id="data-types" class="section-fade">
-                    <h2 class="text-3xl font-bold text-white mb-4">Data Types</h2>
+                <!-- Variables -->
+                <section id="variables" class="section-fade">
+                    <h2 class="text-3xl font-bold text-white mb-4">Variables</h2>
                     
-                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Integers</h3>
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Declaration</h3>
                     <div class="doc-code">
-                        <span class="keyword">PUSH</span> <span class="number">42</span>     <span class="comment">// Decimal</span><br>
-                        <span class="keyword">PUSH</span> <span class="number">0xFF</span>   <span class="comment">// Hexadecimal</span><br>
-                        <span class="keyword">PUSH</span> <span class="number">0b1010</span> <span class="comment">// Binary</span>
+                        <span class="keyword">let</span> <span class="text-white">x</span> <span class="number">10</span><br>
+                        <span class="keyword">let</span> <span class="text-white">name</span> <span class="string">"Luma"</span><br>
+                        <span class="keyword">let</span> <span class="text-white">is_running</span> <span class="number">1</span>
                     </div>
 
-                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Floating-Point Numbers</h3>
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Assignment</h3>
                     <div class="doc-code">
-                        <span class="keyword">PUSH</span> <span class="number">3.14</span><br>
-                        <span class="keyword">PUSH</span> <span class="number">-0.001</span>
-                    </div>
-
-                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Strings</h3>
-                    <div class="doc-code">
-                        <span class="keyword">PUSH</span> <span class="string">"Hello"</span><br>
-                        <span class="keyword">PUSH</span> <span class="string">'World'</span>
-                    </div>
-
-                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Booleans</h3>
-                    <div class="doc-code">
-                        <span class="keyword">PUSH</span> <span class="number">1</span>  <span class="comment">// true</span><br>
-                        <span class="keyword">PUSH</span> <span class="number">0</span>  <span class="comment">// false</span>
-                    </div>
-
-                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Null</h3>
-                    <div class="doc-code">
-                        <span class="keyword">PUSH</span> <span class="keyword">null</span><br>
-                        <span class="keyword">PUSH</span> <span class="keyword">nil</span>  <span class="comment">// Alternative</span>
+                        <span class="keyword">set</span> <span class="text-white">x</span> <span class="number">20</span><br>
+                        <span class="keyword">get</span> <span class="text-white">x</span>     <span class="comment">// Push x onto stack</span><br>
+                        <span class="keyword">get</span> <span class="text-white">y</span><br>
+                        <span class="keyword">add</span>     <span class="comment">// x + y</span>
                     </div>
                 </section>
 
@@ -531,68 +387,55 @@
                 <section id="control-flow" class="section-fade">
                     <h2 class="text-3xl font-bold text-white mb-4">Control Flow</h2>
                     
-                    <h3 class="text-xl font-bold text-white mt-6 mb-3">If Statement</h3>
-                    <div class="doc-code">
-                        <span class="comment">// if condition</span><br>
-                        <span class="keyword">PUSH</span> condition<br>
-                        <span class="keyword">JMP_IF</span> else_label<br>
-                        <span class="keyword">PUSH</span> <span class="string">"Condition is true"</span><br>
-                        <span class="keyword">PRINT</span><br>
-                        <span class="keyword">JMP</span> end_label<br>
-                        <br>
-                        else_label:<br>
-                        <span class="keyword">PUSH</span> <span class="string">"Condition is false"</span><br>
-                        <span class="keyword">PRINT</span><br>
-                        <br>
-                        end_label:<br>
-                        <span class="keyword">HALT</span>
-                    </div>
-
                     <h3 class="text-xl font-bold text-white mt-6 mb-3">Loop</h3>
                     <div class="doc-code">
-                        <span class="comment">// While loop</span><br>
-                        <span class="keyword">PUSH</span> <span class="number">0</span>  <span class="comment">// counter</span><br>
-                        <span class="keyword">PUSH</span> <span class="number">10</span> <span class="comment">// max</span><br>
-                        <br>
-                        loop_start:<br>
-                        <span class="keyword">DUP</span>             <span class="comment">// duplicate counter</span><br>
-                        <span class="keyword">DUP</span>             <span class="comment">// duplicate max</span><br>
-                        <span class="keyword">LT</span>              <span class="comment">// counter &lt; max ?</span><br>
-                        <span class="keyword">JMP_IF</span> loop_end<br>
-                        <br>
-                        <span class="comment">// Loop body</span><br>
-                        <span class="keyword">PUSH</span> <span class="string">"Count: "</span><br>
-                        <span class="keyword">DUP</span>             <span class="comment">// duplicate counter</span><br>
-                        <span class="keyword">ADD</span><br>
-                        <span class="keyword">PRINT</span><br>
-                        <br>
-                        <span class="comment">// Increment</span><br>
-                        <span class="keyword">ADD</span> <span class="number">1</span><br>
-                        <span class="keyword">JMP</span> loop_start<br>
-                        <br>
-                        loop_end:<br>
-                        <span class="keyword">POP</span><br>
-                        <span class="keyword">HALT</span>
+                        <span class="comment">// Infinite game loop</span><br>
+                        <span class="keyword">loop</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">color</span> <span class="number">20 20 40</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">clear</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Game logic here</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">present</span><br>
+                        <span class="keyword">end</span>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Conditional Jump</h3>
+                    <div class="doc-code">
+                        <span class="keyword">get</span> <span class="text-white">x</span><br>
+                        <span class="keyword">push_int</span> <span class="number">100</span><br>
+                        <span class="keyword">gt</span>               <span class="comment">// x > 100 ?</span><br>
+                        <span class="keyword">jump_if</span> label  <span class="comment">// Jump if true</span>
                     </div>
                 </section>
 
-                <!-- Functions -->
-                <section id="functions" class="section-fade">
-                    <h2 class="text-3xl font-bold text-white mb-4">Functions</h2>
+                <!-- Input -->
+                <section id="input" class="section-fade">
+                    <h2 class="text-3xl font-bold text-white mb-4">Input</h2>
                     
-                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Defining Functions</h3>
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Keyboard</h3>
                     <div class="doc-code">
-                        <span class="keyword">FUNC</span> add_two<br>
-                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">PUSH</span> <span class="number">2</span><br>
-                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">ADD</span><br>
-                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">RETURN</span><br>
-                        <span class="keyword">ENDFUNC</span><br>
-                        <br>
-                        <span class="comment">// Usage</span><br>
-                        <span class="keyword">PUSH</span> <span class="number">5</span><br>
-                        <span class="keyword">CALL</span> add_two<br>
-                        <span class="keyword">PRINT</span>  <span class="comment">// Output: 7</span><br>
-                        <span class="keyword">HALT</span>
+                        <span class="keyword">key_down</span> <span class="string">"w"</span>  <span class="comment">// Push true if W is pressed</span><br>
+                        <span class="keyword">key_down</span> <span class="string">"space"</span>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Mouse</h3>
+                    <div class="doc-code">
+                        <span class="keyword">mouse_x</span>       <span class="comment">// Push mouse X position</span><br>
+                        <span class="keyword">mouse_y</span>       <span class="comment">// Push mouse Y position</span><br>
+                        <span class="keyword">mouse_clicked</span>  <span class="comment">// Push true if clicked</span>
+                    </div>
+                </section>
+
+                <!-- Rendering -->
+                <section id="rendering" class="section-fade">
+                    <h2 class="text-3xl font-bold text-white mb-4">Rendering</h2>
+                    
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Primitives</h3>
+                    <div class="doc-code">
+                        <span class="keyword">color</span> <span class="number">255 0 0</span>           <span class="comment">// Set color</span><br>
+                        <span class="keyword">clear</span>                                    <span class="comment">// Clear screen</span><br>
+                        <span class="keyword">fill_circle</span> <span class="number">433 285 25</span>    <span class="comment">// Draw circle</span><br>
+                        <span class="keyword">fill_rect</span> <span class="number">100 100 50 50</span>     <span class="comment">// Draw rectangle</span><br>
+                        <span class="keyword">present</span>                                  <span class="comment">// Show frame</span>
                     </div>
                 </section>
 
@@ -600,61 +443,37 @@
                 <section id="examples" class="section-fade">
                     <h2 class="text-3xl font-bold text-white mb-4">Examples</h2>
                     
-                    <h3 class="text-xl font-bold text-white mt-6 mb-3">FizzBuzz</h3>
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Bouncing Ball</h3>
                     <div class="doc-code">
-                        <span class="keyword">PUSH</span> <span class="number">1</span>  <span class="comment">// i = 1</span><br>
+                        <span class="keyword">let</span> <span class="text-white">x</span> <span class="number">433</span><br>
+                        <span class="keyword">let</span> <span class="text-white">y</span> <span class="number">285</span><br>
+                        <span class="keyword">let</span> <span class="text-white">dx</span> <span class="number">3</span><br>
+                        <span class="keyword">let</span> <span class="text-white">dy</span> <span class="number">2</span><br>
+                        <span class="keyword">let</span> <span class="text-white">radius</span> <span class="number">25</span><br>
                         <br>
-                        loop:<br>
-                        <span class="keyword">DUP</span><br>
-                        <span class="keyword">PUSH</span> <span class="number">15</span><br>
-                        <span class="keyword">MOD</span><br>
-                        <span class="keyword">PUSH</span> <span class="number">0</span><br>
-                        <span class="keyword">EQ</span><br>
-                        <span class="keyword">JMP_IF</span> fizzbuzz<br>
-                        <br>
-                        <span class="keyword">DUP</span><br>
-                        <span class="keyword">PUSH</span> <span class="number">3</span><br>
-                        <span class="keyword">MOD</span><br>
-                        <span class="keyword">PUSH</span> <span class="number">0</span><br>
-                        <span class="keyword">EQ</span><br>
-                        <span class="keyword">JMP_IF</span> fizz<br>
-                        <br>
-                        <span class="keyword">DUP</span><br>
-                        <span class="keyword">PUSH</span> <span class="number">5</span><br>
-                        <span class="keyword">MOD</span><br>
-                        <span class="keyword">PUSH</span> <span class="number">0</span><br>
-                        <span class="keyword">EQ</span><br>
-                        <span class="keyword">JMP_IF</span> buzz<br>
-                        <br>
-                        <span class="keyword">DUP</span><br>
-                        <span class="keyword">PRINT</span><br>
-                        <span class="keyword">JMP</span> next<br>
-                        <br>
-                        fizzbuzz:<br>
-                        <span class="keyword">PUSH</span> <span class="string">"FizzBuzz"</span><br>
-                        <span class="keyword">PRINT</span><br>
-                        <span class="keyword">JMP</span> next<br>
-                        <br>
-                        fizz:<br>
-                        <span class="keyword">PUSH</span> <span class="string">"Fizz"</span><br>
-                        <span class="keyword">PRINT</span><br>
-                        <span class="keyword">JMP</span> next<br>
-                        <br>
-                        buzz:<br>
-                        <span class="keyword">PUSH</span> <span class="string">"Buzz"</span><br>
-                        <span class="keyword">PRINT</span><br>
-                        <br>
-                        next:<br>
-                        <span class="keyword">DUP</span><br>
-                        <span class="keyword">PUSH</span> <span class="number">100</span><br>
-                        <span class="keyword">EQ</span><br>
-                        <span class="keyword">JMP_IF</span> end<br>
-                        <span class="keyword">ADD</span> <span class="number">1</span><br>
-                        <span class="keyword">JMP</span> loop<br>
-                        <br>
-                        end:<br>
-                        <span class="keyword">POP</span><br>
-                        <span class="keyword">HALT</span>
+                        <span class="keyword">loop</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">color</span> <span class="number">20 20 40</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">clear</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Move</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">get</span> <span class="text-white">x</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">get</span> <span class="text-white">dx</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">add</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">set</span> <span class="text-white">x</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">get</span> <span class="text-white">y</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">get</span> <span class="text-white">dy</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">add</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">set</span> <span class="text-white">y</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">color</span> <span class="number">74 255 0</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">get</span> <span class="text-white">x</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">get</span> <span class="text-white">y</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">get</span> <span class="text-white">radius</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">fill_circle</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">present</span><br>
+                        <span class="keyword">end</span>
                     </div>
                 </section>
 
@@ -663,28 +482,28 @@
                     <h2 class="text-3xl font-bold text-white mb-4">Quick Reference</h2>
                     <div class="grid md:grid-cols-2 gap-6">
                         <div class="glass p-4 rounded-xl border border-luma-border/20">
-                            <h4 class="text-luma-pink font-semibold text-sm mb-2">Stack Operations</h4>
-                            <code class="text-xs text-luma-textMuted block">PUSH value</code>
-                            <code class="text-xs text-luma-textMuted block">POP</code>
-                            <code class="text-xs text-luma-textMuted block">DUP</code>
-                            <code class="text-xs text-luma-textMuted block">SWAP</code>
+                            <h4 class="text-luma-pink font-semibold text-sm mb-2">Variables</h4>
+                            <code class="text-xs text-luma-textMuted block">let name value</code>
+                            <code class="text-xs text-luma-textMuted block">set name value</code>
+                            <code class="text-xs text-luma-textMuted block">get name</code>
                         </div>
                         <div class="glass p-4 rounded-xl border border-luma-border/20">
-                            <h4 class="text-luma-purple font-semibold text-sm mb-2">Arithmetic</h4>
-                            <code class="text-xs text-luma-textMuted block">ADD SUB MUL DIV MOD</code>
-                            <code class="text-xs text-luma-textMuted block">NEG</code>
+                            <h4 class="text-luma-purple font-semibold text-sm mb-2">Control Flow</h4>
+                            <code class="text-xs text-luma-textMuted block">loop ... end</code>
+                            <code class="text-xs text-luma-textMuted block">jump label</code>
+                            <code class="text-xs text-luma-textMuted block">jump_if label</code>
                         </div>
                         <div class="glass p-4 rounded-xl border border-luma-border/20">
-                            <h4 class="text-emerald-400 font-semibold text-sm mb-2">Control Flow</h4>
-                            <code class="text-xs text-luma-textMuted block">JMP label</code>
-                            <code class="text-xs text-luma-textMuted block">JMP_IF label</code>
-                            <code class="text-xs text-luma-textMuted block">JMP_IF_NOT label</code>
-                            <code class="text-xs text-luma-textMuted block">HALT</code>
+                            <h4 class="text-emerald-400 font-semibold text-sm mb-2">Input</h4>
+                            <code class="text-xs text-luma-textMuted block">key_down "key"</code>
+                            <code class="text-xs text-luma-textMuted block">mouse_x</code>
+                            <code class="text-xs text-luma-textMuted block">mouse_y</code>
                         </div>
                         <div class="glass p-4 rounded-xl border border-luma-border/20">
-                            <h4 class="text-blue-400 font-semibold text-sm mb-2">I/O</h4>
-                            <code class="text-xs text-luma-textMuted block">PRINT</code>
-                            <code class="text-xs text-luma-textMuted block">READ</code>
+                            <h4 class="text-blue-400 font-semibold text-sm mb-2">Rendering</h4>
+                            <code class="text-xs text-luma-textMuted block">color r g b</code>
+                            <code class="text-xs text-luma-textMuted block">fill_circle x y r</code>
+                            <code class="text-xs text-luma-textMuted block">fill_rect x y w h</code>
                         </div>
                     </div>
                 </section>
@@ -727,7 +546,7 @@
                 <a href="https://twitter.com/Princeflouz" target="_blank" class="text-luma-textMuted hover:text-white transition-all duration-300 hover:scale-110">
                     <i class="fab fa-twitter"></i>
                 </a>
-                <a href="https://discord.gg/ZJBRq54pC" target="_blank" class="text-luma-textMuted hover:text-white transition-all duration-300 hover:scale-110">
+                <a href="https://discord.gg/zPersGwUnp" target="_blank" class="text-luma-textMuted hover:text-white transition-all duration-300 hover:scale-110">
                     <i class="fab fa-discord"></i>
                 </a>
             </div>
@@ -735,7 +554,7 @@
         <div class="mt-6 text-xs text-luma-textMuted/30">
             <span class="inline-flex items-center gap-2">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                LOVE v1.0.0 • Built with ❤️ and ☕
+                LOVE v1.0 • Runtime Loop • 60 FPS
             </span>
         </div>
     </footer>

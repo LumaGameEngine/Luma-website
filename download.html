@@ -224,9 +224,9 @@
                     LOVE Docs
                     <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-luma-pink to-luma-purple transition-all duration-300 group-hover:w-full"></span>
                 </a>
-                <a href="download.html" class="hover:text-white transition-all duration-300 relative group">
+                <a href="download.html" class="hover:text-white transition-all duration-300 relative group text-white">
                     Download
-                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-luma-pink to-luma-purple transition-all duration-300 group-hover:w-full"></span>
+                    <span class="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-luma-pink to-luma-purple"></span>
                 </a>
             </div>
             
@@ -260,6 +260,11 @@
         <p class="text-base sm:text-lg text-luma-textMuted max-w-2xl mx-auto font-normal leading-relaxed mb-12 animate-slide-up" style="animation-delay: 0.2s;">
             Download the latest version of Luma Engine. Open source, free to use, and ready to build your next game.
         </p>
+        
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 mb-8">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            v0.1.0-alpha • Runtime Loop • LOVE VM • DL-V1
+        </div>
     </section>
 
     <!-- ===================================================== -->
@@ -278,7 +283,7 @@
                 <p class="text-luma-textMuted text-sm mb-6">Ubuntu 20.04+ / Debian 11+</p>
                 <div class="text-xs text-luma-textMuted/60 mb-4">
                     <span class="block">x86_64 • Static Build</span>
-                    <span class="block">v0.1.0-alpha</span>
+                    <span class="block">v0.1.0-alpha (Runtime Loop)</span>
                 </div>
                 <a href="#" class="block bg-gradient-to-r from-luma-pink to-luma-purple text-white font-bold py-3 rounded-xl shadow-neon-pink hover:shadow-neon-pink/50 transition-all duration-300 hover:scale-105 btn-glow">
                     <i class="fas fa-download mr-2"></i> Download .tar.gz
@@ -297,13 +302,13 @@
                 <p class="text-luma-textMuted text-sm mb-6">Windows 10 / 11</p>
                 <div class="text-xs text-luma-textMuted/60 mb-4">
                     <span class="block">x86_64 • Static Build</span>
-                    <span class="block">v0.1.0-alpha</span>
+                    <span class="block">v0.1.0-alpha (Coming Soon)</span>
                 </div>
-                <a href="#" class="block bg-gradient-to-r from-luma-pink to-luma-purple text-white font-bold py-3 rounded-xl shadow-neon-pink hover:shadow-neon-pink/50 transition-all duration-300 hover:scale-105 btn-glow">
-                    <i class="fas fa-download mr-2"></i> Download .zip
+                <a href="#" class="block bg-luma-panel border border-luma-border/50 text-luma-textMuted font-bold py-3 rounded-xl cursor-not-allowed opacity-60">
+                    <i class="fas fa-clock mr-2"></i> Coming Soon
                 </a>
                 <div class="mt-4 text-xs text-luma-textMuted/40">
-                    ~18 MB • SHA256: e5f6g7h8...
+                    ~18 MB • Estimated: August 2026
                 </div>
             </div>
 
@@ -316,13 +321,13 @@
                 <p class="text-luma-textMuted text-sm mb-6">macOS 12.0+ (Apple Silicon)</p>
                 <div class="text-xs text-luma-textMuted/60 mb-4">
                     <span class="block">ARM64 • Static Build</span>
-                    <span class="block">v0.1.0-alpha</span>
+                    <span class="block">v0.1.0-alpha (Coming Soon)</span>
                 </div>
-                <a href="#" class="block bg-gradient-to-r from-luma-pink to-luma-purple text-white font-bold py-3 rounded-xl shadow-neon-pink hover:shadow-neon-pink/50 transition-all duration-300 hover:scale-105 btn-glow">
-                    <i class="fas fa-download mr-2"></i> Download .dmg
+                <a href="#" class="block bg-luma-panel border border-luma-border/50 text-luma-textMuted font-bold py-3 rounded-xl cursor-not-allowed opacity-60">
+                    <i class="fas fa-clock mr-2"></i> Coming Soon
                 </a>
                 <div class="mt-4 text-xs text-luma-textMuted/40">
-                    ~16 MB • SHA256: i9j0k1l2...
+                    ~16 MB • Estimated: August 2026
                 </div>
             </div>
 
@@ -369,15 +374,17 @@
                 <div class="border-l-2 border-luma-pink pl-4">
                     <div class="flex items-center gap-3">
                         <span class="text-xs font-mono text-luma-pink bg-luma-pink/10 px-2 py-0.5 rounded">v0.1.0-alpha</span>
-                        <span class="text-xs text-luma-textMuted">July 4, 2026</span>
+                        <span class="text-xs text-luma-textMuted">July 12, 2026</span>
                     </div>
                     <ul class="mt-2 text-sm text-luma-textMuted space-y-1">
-                        <li>✨ Initial alpha release</li>
-                        <li>✅ SDL3 window subsystem</li>
-                        <li>✅ ImGui editor integration</li>
-                        <li>✅ Asset system with UUID</li>
-                        <li>✅ LOVE scripting VM</li>
-                        <li>✅ Dimension_L renderer (DL-V1)</li>
+                        <li>✨ <span class="text-white">Runtime Loop</span> — 60 FPS continuous execution</li>
+                        <li>✅ <span class="text-white">LOVE VM</span> — Bytecode compiler and stack-based VM</li>
+                        <li>✅ <span class="text-white">Variables</span> — let, get, set support</li>
+                        <li>✅ <span class="text-white">Control Flow</span> — loop/end, jump, jump_if</li>
+                        <li>✅ <span class="text-white">Input</span> — Keyboard and mouse support</li>
+                        <li>✅ <span class="text-white">Property Panel</span> — Real-time shape editing</li>
+                        <li>✅ <span class="text-white">Software Renderer</span> — Pixel, Line, Triangle, Rect, Circle</li>
+                        <li>✅ <span class="text-white">Dimension_L</span> — DL-V1 rendering architecture</li>
                     </ul>
                 </div>
             </div>
@@ -411,7 +418,7 @@
                 <a href="https://twitter.com/Princeflouz" target="_blank" class="text-luma-textMuted hover:text-white transition-all duration-300 hover:scale-110">
                     <i class="fab fa-twitter"></i>
                 </a>
-                <a href="https://discord.gg/ZJBRq54pC" target="_blank" class="text-luma-textMuted hover:text-white transition-all duration-300 hover:scale-110">
+                <a href="https://discord.gg/zPersGwUnp" target="_blank" class="text-luma-textMuted hover:text-white transition-all duration-300 hover:scale-110">
                     <i class="fab fa-discord"></i>
                 </a>
             </div>
@@ -419,7 +426,7 @@
         <div class="mt-6 text-xs text-luma-textMuted/30">
             <span class="inline-flex items-center gap-2">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                v0.1.0-alpha • Built with ❤️ and ☕
+                v0.1.0-alpha • Runtime Loop • LOVE VM • DL-V1
             </span>
         </div>
     </footer>
