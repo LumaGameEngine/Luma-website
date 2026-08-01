@@ -206,6 +206,19 @@
             color: #4CAF50;
         }
 
+        .status-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 9999px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
         @media (max-width: 640px) {
             .hero-title {
                 font-size: 2.5rem !important;
@@ -246,8 +259,8 @@
                     Vision
                     <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-luma-pink to-luma-purple transition-all duration-300 group-hover:w-full"></span>
                 </a>
-                <a href="index.html#dimension-l" class="hover:text-white transition-all duration-300 relative group">
-                    Dimension_L
+                <a href="index.html#features" class="hover:text-white transition-all duration-300 relative group">
+                    Features
                     <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-luma-pink to-luma-purple transition-all duration-300 group-hover:w-full"></span>
                 </a>
                 <a href="docs.html" class="hover:text-white transition-all duration-300 relative group text-white">
@@ -280,7 +293,8 @@
     
     <section class="relative pt-32 pb-16 md:pt-44 md:pb-20 px-6 max-w-7xl mx-auto text-center page-transition">
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-luma-pink/20 text-xs font-semibold tracking-wide text-luma-pink uppercase mb-6 animate-slide-up">
-            <i class="fas fa-heart mr-2"></i> LOVE Language v1.0
+            <i class="fas fa-heart mr-2"></i> LOVE Language
+            <span class="status-badge ml-2">v1.0 • Active</span>
         </div>
 
         <h1 class="hero-title text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight max-w-4xl mx-auto leading-[1.1] mb-6 animate-slide-up" style="animation-delay: 0.1s;">
@@ -288,7 +302,7 @@
         </h1>
         
         <p class="text-base sm:text-lg text-luma-textMuted max-w-2xl mx-auto font-normal leading-relaxed mb-12 animate-slide-up" style="animation-delay: 0.2s;">
-            Lightweight, sandboxed, and designed for game logic. LOVE runs on the Luma Engine VM with a runtime loop at 60 FPS.
+            Lightweight, sandboxed, and designed for game logic. LOVE runs on the Luma Engine VM with a runtime loop at 60 FPS. Fully integrated with the Scene System and Renderer.
         </p>
     </section>
 
@@ -306,6 +320,7 @@
                     <a href="#introduction" class="active">Introduction</a>
                     <a href="#getting-started">Getting Started</a>
                     <a href="#variables">Variables</a>
+                    <a href="#operators">Operators</a>
                     <a href="#control-flow">Control Flow</a>
                     <a href="#input">Input</a>
                     <a href="#rendering">Rendering</a>
@@ -321,7 +336,7 @@
                 <section id="introduction" class="section-fade">
                     <h2 class="text-3xl font-bold text-white mb-4">Introduction</h2>
                     <p class="text-luma-textMuted leading-relaxed mb-4">
-                        <strong>LOVE</strong> (Luma Object &amp; Virtual-machine Environment) is a lightweight, sandboxed scripting language designed for the Luma Engine. It compiles to bytecode and runs on the Luma VM at 60 FPS.
+                        <strong>LOVE</strong> (Luma Object &amp; Virtual-machine Environment) is a lightweight, sandboxed scripting language designed for the Luma Engine. It compiles to bytecode and runs on the Luma VM at 60 FPS within the engine's runtime loop.
                     </p>
                     <div class="grid sm:grid-cols-3 gap-4 mt-6">
                         <div class="glass p-4 rounded-xl border border-luma-border/20">
@@ -331,8 +346,8 @@
                         </div>
                         <div class="glass p-4 rounded-xl border border-luma-border/20">
                             <i class="fas fa-shield-halved text-luma-purple text-lg mb-2"></i>
-                            <h4 class="text-white font-semibold text-sm">Safe</h4>
-                            <p class="text-xs text-luma-textMuted">Sandboxed execution</p>
+                            <h4 class="text-white font-semibold text-sm">Sandboxed</h4>
+                            <p class="text-xs text-luma-textMuted">Isolated execution scope</p>
                         </div>
                         <div class="glass p-4 rounded-xl border border-luma-border/20">
                             <i class="fas fa-bolt text-emerald-400 text-lg mb-2"></i>
@@ -340,11 +355,20 @@
                             <p class="text-xs text-luma-textMuted">60 FPS runtime loop</p>
                         </div>
                     </div>
+                    <div class="mt-6 p-4 glass rounded-xl border border-luma-border/20 bg-emerald-500/5">
+                        <p class="text-xs text-luma-textMuted">
+                            <i class="fas fa-check-circle text-emerald-400 mr-2"></i>
+                            <strong>Status:</strong> LOVE is fully integrated with the engine's Scene System, Renderer, and InputManager. All features documented here are working in the current build.
+                        </p>
+                    </div>
                 </section>
 
                 <!-- Getting Started -->
                 <section id="getting-started" class="section-fade">
                     <h2 class="text-3xl font-bold text-white mb-4">Getting Started</h2>
+                    <p class="text-luma-textMuted text-sm mb-4">
+                        LOVE scripts are written in <code class="text-luma-pink">.love</code> files and executed via the LOVE VM. The runtime loop handles continuous execution at 60 FPS.
+                    </p>
                     
                     <h3 class="text-xl font-bold text-white mt-6 mb-3">Variables</h3>
                     <div class="doc-code">
@@ -353,11 +377,13 @@
                         <span class="keyword">let</span> <span class="text-white">y</span> <span class="number">285</span>
                     </div>
 
-                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Game Loop</h3>
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Basic Game Loop</h3>
                     <div class="doc-code">
+                        <span class="comment">// Basic LOVE game loop</span><br>
                         <span class="keyword">loop</span><br>
                         &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">color</span> <span class="number">20 20 40</span><br>
                         &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">clear</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Game logic here</span><br>
                         &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">present</span><br>
                         <span class="keyword">end</span>
                     </div>
@@ -371,7 +397,7 @@
                     <div class="doc-code">
                         <span class="keyword">let</span> <span class="text-white">x</span> <span class="number">10</span><br>
                         <span class="keyword">let</span> <span class="text-white">name</span> <span class="string">"Luma"</span><br>
-                        <span class="keyword">let</span> <span class="text-white">is_running</span> <span class="number">1</span>
+                        <span class="keyword">let</span> <span class="text-white">is_running</span> <span class="number">1</span> <span class="comment">// Boolean: 0 = false, 1 = true</span>
                     </div>
 
                     <h3 class="text-xl font-bold text-white mt-6 mb-3">Assignment</h3>
@@ -380,6 +406,47 @@
                         <span class="keyword">get</span> <span class="text-white">x</span>     <span class="comment">// Push x onto stack</span><br>
                         <span class="keyword">get</span> <span class="text-white">y</span><br>
                         <span class="keyword">add</span>     <span class="comment">// x + y</span>
+                    </div>
+
+                    <div class="mt-4 p-3 glass rounded-lg border border-luma-border/20">
+                        <p class="text-xs text-luma-textMuted">
+                            <i class="fas fa-info-circle text-luma-pink mr-2"></i>
+                            <strong>Note:</strong> Variables are dynamically typed. The VM handles integer, float, string, and boolean types.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Operators -->
+                <section id="operators" class="section-fade">
+                    <h2 class="text-3xl font-bold text-white mb-4">Operators</h2>
+                    
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Arithmetic</h3>
+                    <div class="doc-code">
+                        <span class="keyword">get</span> <span class="text-white">x</span><br>
+                        <span class="keyword">get</span> <span class="text-white">y</span><br>
+                        <span class="keyword">add</span>     <span class="comment">// x + y</span><br>
+                        <span class="keyword">sub</span>     <span class="comment">// x - y</span><br>
+                        <span class="keyword">mul</span>     <span class="comment">// x * y</span><br>
+                        <span class="keyword">div</span>     <span class="comment">// x / y</span>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Comparison</h3>
+                    <div class="doc-code">
+                        <span class="keyword">get</span> <span class="text-white">x</span><br>
+                        <span class="keyword">get</span> <span class="text-white">y</span><br>
+                        <span class="keyword">eq</span>      <span class="comment">// x == y</span><br>
+                        <span class="keyword">ne</span>      <span class="comment">// x != y</span><br>
+                        <span class="keyword">lt</span>      <span class="comment">// x < y</span><br>
+                        <span class="keyword">gt</span>      <span class="comment">// x > y</span><br>
+                        <span class="keyword">le</span>      <span class="comment">// x <= y</span><br>
+                        <span class="keyword">ge</span>      <span class="comment">// x >= y</span>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Logical</h3>
+                    <div class="doc-code">
+                        <span class="keyword">and</span>     <span class="comment">// Logical AND</span><br>
+                        <span class="keyword">or</span>      <span class="comment">// Logical OR</span><br>
+                        <span class="keyword">not</span>     <span class="comment">// Logical NOT</span>
                     </div>
                 </section>
 
@@ -398,44 +465,89 @@
                         <span class="keyword">end</span>
                     </div>
 
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Unconditional Jump</h3>
+                    <div class="doc-code">
+                        <span class="keyword">jump</span> <span class="text-yellow-400">my_label</span><br>
+                        <span class="comment">// Code here is skipped</span><br>
+                        <span class="text-yellow-400">my_label:</span><br>
+                        <span class="comment">// Execution continues here</span>
+                    </div>
+
                     <h3 class="text-xl font-bold text-white mt-6 mb-3">Conditional Jump</h3>
                     <div class="doc-code">
                         <span class="keyword">get</span> <span class="text-white">x</span><br>
                         <span class="keyword">push_int</span> <span class="number">100</span><br>
                         <span class="keyword">gt</span>               <span class="comment">// x > 100 ?</span><br>
-                        <span class="keyword">jump_if</span> label  <span class="comment">// Jump if true</span>
+                        <span class="keyword">jump_if</span> <span class="text-yellow-400">label</span>  <span class="comment">// Jump if true</span><br>
+                        <span class="comment">// Code here runs if false</span><br>
+                        <span class="text-yellow-400">label:</span><br>
+                        <span class="comment">// Code here runs if true</span>
+                    </div>
+
+                    <div class="mt-4 p-3 glass rounded-lg border border-luma-border/20">
+                        <p class="text-xs text-luma-textMuted">
+                            <i class="fas fa-info-circle text-luma-purple mr-2"></i>
+                            <strong>Tip:</strong> Labels can be any name and are resolved during compilation.
+                        </p>
                     </div>
                 </section>
 
                 <!-- Input -->
                 <section id="input" class="section-fade">
                     <h2 class="text-3xl font-bold text-white mb-4">Input</h2>
+                    <p class="text-luma-textMuted text-sm mb-4">
+                        LOVE provides direct access to keyboard and mouse input through the InputManager.
+                    </p>
                     
                     <h3 class="text-xl font-bold text-white mt-6 mb-3">Keyboard</h3>
                     <div class="doc-code">
                         <span class="keyword">key_down</span> <span class="string">"w"</span>  <span class="comment">// Push true if W is pressed</span><br>
-                        <span class="keyword">key_down</span> <span class="string">"space"</span>
+                        <span class="keyword">key_down</span> <span class="string">"space"</span> <span class="comment">// Push true if Space is pressed</span><br>
+                        <span class="keyword">key_down</span> <span class="string">"a"</span>   <span class="comment">// Push true if A is pressed</span>
                     </div>
 
                     <h3 class="text-xl font-bold text-white mt-6 mb-3">Mouse</h3>
                     <div class="doc-code">
-                        <span class="keyword">mouse_x</span>       <span class="comment">// Push mouse X position</span><br>
-                        <span class="keyword">mouse_y</span>       <span class="comment">// Push mouse Y position</span><br>
-                        <span class="keyword">mouse_clicked</span>  <span class="comment">// Push true if clicked</span>
+                        <span class="keyword">mouse_x</span>       <span class="comment">// Push mouse X position (in pixels)</span><br>
+                        <span class="keyword">mouse_y</span>       <span class="comment">// Push mouse Y position (in pixels)</span><br>
+                        <span class="keyword">mouse_clicked</span>  <span class="comment">// Push true if left mouse clicked this frame</span>
+                    </div>
+
+                    <div class="mt-4 p-3 glass rounded-lg border border-luma-border/20">
+                        <p class="text-xs text-luma-textMuted">
+                            <i class="fas fa-info-circle text-luma-pink mr-2"></i>
+                            <strong>Note:</strong> Input is polled at 60 FPS. <code>key_down</code> checks if the key is currently held down.
+                        </p>
                     </div>
                 </section>
 
                 <!-- Rendering -->
                 <section id="rendering" class="section-fade">
                     <h2 class="text-3xl font-bold text-white mb-4">Rendering</h2>
+                    <p class="text-luma-textMuted text-sm mb-4">
+                        LOVE scripts can draw primitives directly to the framebuffer using the software renderer.
+                    </p>
                     
                     <h3 class="text-xl font-bold text-white mt-6 mb-3">Primitives</h3>
                     <div class="doc-code">
-                        <span class="keyword">color</span> <span class="number">255 0 0</span>           <span class="comment">// Set color</span><br>
-                        <span class="keyword">clear</span>                                    <span class="comment">// Clear screen</span><br>
-                        <span class="keyword">fill_circle</span> <span class="number">433 285 25</span>    <span class="comment">// Draw circle</span><br>
-                        <span class="keyword">fill_rect</span> <span class="number">100 100 50 50</span>     <span class="comment">// Draw rectangle</span><br>
-                        <span class="keyword">present</span>                                  <span class="comment">// Show frame</span>
+                        <span class="keyword">color</span> <span class="number">255 0 0</span>           <span class="comment">// Set color (R G B)</span><br>
+                        <span class="keyword">clear</span>                                    <span class="comment">// Clear screen with current color</span><br>
+                        <span class="keyword">draw_pixel</span> <span class="number">100 100</span>          <span class="comment">// Draw a single pixel</span><br>
+                        <span class="keyword">draw_line</span> <span class="number">0 0 100 100</span>       <span class="comment">// Draw a line</span><br>
+                        <span class="keyword">draw_rect</span> <span class="number">100 100 50 50</span>     <span class="comment">// Draw rectangle outline</span><br>
+                        <span class="keyword">fill_rect</span> <span class="number">100 100 50 50</span>      <span class="comment">// Draw filled rectangle</span><br>
+                        <span class="keyword">draw_triangle</span> <span class="number">0 0 50 100 100 0</span> <span class="comment">// Draw triangle outline</span><br>
+                        <span class="keyword">fill_triangle</span> <span class="number">0 0 50 100 100 0</span>  <span class="comment">// Draw filled triangle</span><br>
+                        <span class="keyword">draw_circle</span> <span class="number">433 285 25</span>       <span class="comment">// Draw circle outline</span><br>
+                        <span class="keyword">fill_circle</span> <span class="number">433 285 25</span>       <span class="comment">// Draw filled circle</span><br>
+                        <span class="keyword">present</span>                                  <span class="comment">// Show the frame</span>
+                    </div>
+
+                    <div class="mt-4 p-3 glass rounded-lg border border-luma-border/20">
+                        <p class="text-xs text-luma-textMuted">
+                            <i class="fas fa-info-circle text-emerald-400 mr-2"></i>
+                            <strong>Note:</strong> All coordinates are in pixels. The renderer uses a software framebuffer with Z-buffer support.
+                        </p>
                     </div>
                 </section>
 
@@ -443,19 +555,22 @@
                 <section id="examples" class="section-fade">
                     <h2 class="text-3xl font-bold text-white mb-4">Examples</h2>
                     
-                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Bouncing Ball</h3>
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Bouncing Ball with Controls</h3>
                     <div class="doc-code">
+                        <span class="comment">// Bouncing ball with WASD control</span><br>
                         <span class="keyword">let</span> <span class="text-white">x</span> <span class="number">433</span><br>
                         <span class="keyword">let</span> <span class="text-white">y</span> <span class="number">285</span><br>
                         <span class="keyword">let</span> <span class="text-white">dx</span> <span class="number">3</span><br>
                         <span class="keyword">let</span> <span class="text-white">dy</span> <span class="number">2</span><br>
                         <span class="keyword">let</span> <span class="text-white">radius</span> <span class="number">25</span><br>
+                        <span class="keyword">let</span> <span class="text-white">score</span> <span class="number">0</span><br>
                         <br>
                         <span class="keyword">loop</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Clear screen</span><br>
                         &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">color</span> <span class="number">20 20 40</span><br>
                         &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">clear</span><br>
                         &nbsp;&nbsp;&nbsp;&nbsp;<br>
-                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Move</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Move ball</span><br>
                         &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">get</span> <span class="text-white">x</span><br>
                         &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">get</span> <span class="text-white">dx</span><br>
                         &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">add</span><br>
@@ -466,6 +581,20 @@
                         &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">add</span><br>
                         &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">set</span> <span class="text-white">y</span><br>
                         &nbsp;&nbsp;&nbsp;&nbsp;<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Bounce off walls</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">get</span> <span class="text-white">x</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">get</span> <span class="text-white">radius</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">lt</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">jump_if</span> <span class="text-yellow-400">bounce_x</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">get</span> <span class="text-white">x</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">push_int</span> <span class="number">800</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">get</span> <span class="text-white">radius</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sub</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">gt</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">jump_if</span> <span class="text-yellow-400">bounce_x</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Draw ball</span><br>
                         &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">color</span> <span class="number">74 255 0</span><br>
                         &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">get</span> <span class="text-white">x</span><br>
                         &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">get</span> <span class="text-white">y</span><br>
@@ -473,7 +602,25 @@
                         &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">fill_circle</span><br>
                         &nbsp;&nbsp;&nbsp;&nbsp;<br>
                         &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">present</span><br>
-                        <span class="keyword">end</span>
+                        <span class="keyword">end</span><br>
+                        <br>
+                        <span class="text-yellow-400">bounce_x:</span><br>
+                        <span class="keyword">push_int</span> <span class="number">-1</span><br>
+                        <span class="keyword">get</span> <span class="text-white">dx</span><br>
+                        <span class="keyword">mul</span><br>
+                        <span class="keyword">set</span> <span class="text-white">dx</span><br>
+                        <span class="keyword">get</span> <span class="text-white">score</span><br>
+                        <span class="keyword">push_int</span> <span class="number">1</span><br>
+                        <span class="keyword">add</span><br>
+                        <span class="keyword">set</span> <span class="text-white">score</span><br>
+                        <span class="keyword">jump</span> <span class="text-yellow-400">loop</span>
+                    </div>
+
+                    <div class="mt-4 p-3 glass rounded-lg border border-luma-border/20">
+                        <p class="text-xs text-luma-textMuted">
+                            <i class="fas fa-code text-luma-purple mr-2"></i>
+                            <strong>Full Example:</strong> This script demonstrates variables, arithmetic, control flow, input, and rendering in 47 bytecode instructions.
+                        </p>
                     </div>
                 </section>
 
@@ -492,18 +639,34 @@
                             <code class="text-xs text-luma-textMuted block">loop ... end</code>
                             <code class="text-xs text-luma-textMuted block">jump label</code>
                             <code class="text-xs text-luma-textMuted block">jump_if label</code>
+                            <code class="text-xs text-luma-textMuted block">jump_if_not label</code>
                         </div>
                         <div class="glass p-4 rounded-xl border border-luma-border/20">
                             <h4 class="text-emerald-400 font-semibold text-sm mb-2">Input</h4>
                             <code class="text-xs text-luma-textMuted block">key_down "key"</code>
                             <code class="text-xs text-luma-textMuted block">mouse_x</code>
                             <code class="text-xs text-luma-textMuted block">mouse_y</code>
+                            <code class="text-xs text-luma-textMuted block">mouse_clicked</code>
                         </div>
                         <div class="glass p-4 rounded-xl border border-luma-border/20">
                             <h4 class="text-blue-400 font-semibold text-sm mb-2">Rendering</h4>
                             <code class="text-xs text-luma-textMuted block">color r g b</code>
-                            <code class="text-xs text-luma-textMuted block">fill_circle x y r</code>
+                            <code class="text-xs text-luma-textMuted block">clear</code>
+                            <code class="text-xs text-luma-textMuted block">draw_pixel x y</code>
+                            <code class="text-xs text-luma-textMuted block">draw_line x0 y0 x1 y1</code>
+                            <code class="text-xs text-luma-textMuted block">draw_rect x y w h</code>
                             <code class="text-xs text-luma-textMuted block">fill_rect x y w h</code>
+                            <code class="text-xs text-luma-textMuted block">draw_triangle x0 y0 x1 y1 x2 y2</code>
+                            <code class="text-xs text-luma-textMuted block">fill_triangle x0 y0 x1 y1 x2 y2</code>
+                            <code class="text-xs text-luma-textMuted block">draw_circle cx cy r</code>
+                            <code class="text-xs text-luma-textMuted block">fill_circle cx cy r</code>
+                            <code class="text-xs text-luma-textMuted block">present</code>
+                        </div>
+                        <div class="glass p-4 rounded-xl border border-luma-border/20 md:col-span-2">
+                            <h4 class="text-yellow-400 font-semibold text-sm mb-2">Arithmetic &amp; Comparison</h4>
+                            <code class="text-xs text-luma-textMuted block">add sub mul div</code>
+                            <code class="text-xs text-luma-textMuted block">eq ne lt gt le ge</code>
+                            <code class="text-xs text-luma-textMuted block">and or not</code>
                         </div>
                     </div>
                 </section>
@@ -554,7 +717,7 @@
         <div class="mt-6 text-xs text-luma-textMuted/30">
             <span class="inline-flex items-center gap-2">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                LOVE v1.0 • Runtime Loop • 60 FPS
+                LOVE v1.0 • Runtime Loop • 60 FPS • Scene System Ready
             </span>
         </div>
     </footer>
