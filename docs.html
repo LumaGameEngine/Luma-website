@@ -324,6 +324,7 @@
                     <a href="#control-flow">Control Flow</a>
                     <a href="#input">Input</a>
                     <a href="#rendering">Rendering</a>
+                    <a href="#audio">Audio</a>
                     <a href="#examples">Examples</a>
                     <a href="#quick-reference">Quick Reference</a>
                 </div>
@@ -358,7 +359,7 @@
                     <div class="mt-6 p-4 glass rounded-xl border border-luma-border/20 bg-emerald-500/5">
                         <p class="text-xs text-luma-textMuted">
                             <i class="fas fa-check-circle text-emerald-400 mr-2"></i>
-                            <strong>Status:</strong> LOVE is fully integrated with the engine's Scene System, Renderer, and InputManager. All features documented here are working in the current build.
+                            <strong>Status:</strong> LOVE is fully integrated with the engine's Scene System, Renderer, Audio System, and InputManager. All features documented here are working in the current build.
                         </p>
                     </div>
                 </section>
@@ -551,6 +552,28 @@
                     </div>
                 </section>
 
+                <!-- Audio -->
+                <section id="audio" class="section-fade">
+                    <h2 class="text-3xl font-bold text-white mb-4">Audio</h2>
+                    <p class="text-luma-textMuted text-sm mb-4">
+                        LOVE scripts can play sounds and control audio using the SDL3 audio system.
+                    </p>
+                    
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Audio Commands</h3>
+                    <div class="doc-code">
+                        <span class="keyword">audio_load</span> <span class="string">"pop.wav"</span> <span class="string">"pop"</span>   <span class="comment">// Load sound with ID</span><br>
+                        <span class="keyword">audio_play</span> <span class="string">"pop"</span>                    <span class="comment">// Play loaded sound</span><br>
+                        <span class="keyword">audio_set_volume</span> <span class="number">0.5</span>               <span class="comment">// Set master volume (0.0 - 1.0)</span>
+                    </div>
+
+                    <div class="mt-4 p-3 glass rounded-lg border border-luma-border/20">
+                        <p class="text-xs text-luma-textMuted">
+                            <i class="fas fa-info-circle text-luma-purple mr-2"></i>
+                            <strong>Note:</strong> Audio commands work with WAV files. The audio system uses SDL3 and supports volume control.
+                        </p>
+                    </div>
+                </section>
+
                 <!-- Examples -->
                 <section id="examples" class="section-fade">
                     <h2 class="text-3xl font-bold text-white mb-4">Examples</h2>
@@ -616,10 +639,25 @@
                         <span class="keyword">jump</span> <span class="text-yellow-400">loop</span>
                     </div>
 
+                    <h3 class="text-xl font-bold text-white mt-6 mb-3">Audio Example</h3>
+                    <div class="doc-code">
+                        <span class="comment">// Load and play a sound</span><br>
+                        <span class="keyword">audio_load</span> <span class="string">"pop.wav"</span> <span class="string">"pop"</span><br>
+                        <br>
+                        <span class="keyword">loop</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Play sound on mouse click</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> <span class="keyword">mouse_clicked</span> <span class="keyword">then</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">audio_play</span> <span class="string">"pop"</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">present</span><br>
+                        <span class="keyword">end</span>
+                    </div>
+
                     <div class="mt-4 p-3 glass rounded-lg border border-luma-border/20">
                         <p class="text-xs text-luma-textMuted">
                             <i class="fas fa-code text-luma-purple mr-2"></i>
-                            <strong>Full Example:</strong> This script demonstrates variables, arithmetic, control flow, input, and rendering in 47 bytecode instructions.
+                            <strong>Full Example:</strong> The bouncing ball script demonstrates variables, arithmetic, control flow, input, and rendering in 47 bytecode instructions. The audio example shows how to integrate sound effects.
                         </p>
                     </div>
                 </section>
@@ -662,7 +700,13 @@
                             <code class="text-xs text-luma-textMuted block">fill_circle cx cy r</code>
                             <code class="text-xs text-luma-textMuted block">present</code>
                         </div>
-                        <div class="glass p-4 rounded-xl border border-luma-border/20 md:col-span-2">
+                        <div class="glass p-4 rounded-xl border border-luma-border/20">
+                            <h4 class="text-luma-pink font-semibold text-sm mb-2">Audio</h4>
+                            <code class="text-xs text-luma-textMuted block">audio_load "path" "id"</code>
+                            <code class="text-xs text-luma-textMuted block">audio_play "id"</code>
+                            <code class="text-xs text-luma-textMuted block">audio_set_volume 0.5</code>
+                        </div>
+                        <div class="glass p-4 rounded-xl border border-luma-border/20">
                             <h4 class="text-yellow-400 font-semibold text-sm mb-2">Arithmetic &amp; Comparison</h4>
                             <code class="text-xs text-luma-textMuted block">add sub mul div</code>
                             <code class="text-xs text-luma-textMuted block">eq ne lt gt le ge</code>
@@ -694,7 +738,7 @@
                 </div>
                 <span class="font-bold text-white text-base">Luma Engine</span>
                 <span class="text-luma-textMuted/30">•</span>
-                <span>MIT License</span>
+                <span>Proprietary</span>
             </div>
             
             <div class="flex items-center gap-3">
@@ -717,7 +761,7 @@
         <div class="mt-6 text-xs text-luma-textMuted/30">
             <span class="inline-flex items-center gap-2">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                LOVE v1.0 • Runtime Loop • 60 FPS • Scene System Ready
+                LOVE v1.0 • Runtime Loop • 60 FPS • Scene System Ready • Audio Ready
             </span>
         </div>
     </footer>
