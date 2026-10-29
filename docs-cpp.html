@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation — Luma Engine C++</title>
+  <meta name="description" content="C++ edition documentation: architecture, LOVE scripting language, Dimension L renderer, scene system, editor, and asset pipeline.">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --void:        #090710;
+      --deep-plum:   #120D1C;
+      --sakura-dark: #211226;
+      --sakura-pink: #FF83C5;
+      --bloom:       #D8CEFF;
+      --wisteria:    #B9A0FF;
+      --frost:       #F4F0FA;
+      --moonlight:   #B7AEC7;
+      --border:      #33233D;
+      --green:       #6EE7A8;
+
+      /* C++ Edition accents */
+      --edition-accent:    #C5B8F2;
+      --edition-highlight: #E3DCFF;
+      --edition-glow:      rgba(197, 184, 242, 0.2);
+
+      --font-heading: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+      --font-body:    'Inter', 'Plus Jakarta Sans', sans-serif;
+      --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    html, body { margin: 0; padding: 0; }
+
+    body {
+      background: var(--void);
+      color: var(--frost);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      min-height: 100vh;
+      position: relative;
+      isolation: isolate;
+    }
+
+    /* ── BACKGROUND ─────────────────────────────────────────── */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: -3;
+      pointer-events: none;
+      background-color: var(--void);
+      background-image: url('bkg.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .bg-video {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -2;
+      pointer-events: none;
+      opacity: 0.38;
+      filter: saturate(0.8) brightness(0.8);
+    }
+
+    .bg-vignette {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 30% 40%, rgba(9, 7, 16, 0.12) 0%, rgba(9, 7, 16, 0.45) 60%, rgba(9, 7, 16, 0.72) 100%),
+        linear-gradient(90deg, rgba(9, 7, 16, 0.65) 0%, rgba(9, 7, 16, 0.35) 42%, rgba(9, 7, 16, 0.1) 100%);
+    }
+
+    /* ── PAUSE BUTTON ─────────────────────────────────────────── */
+    .bg-pause {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 100;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(18, 13, 28, 0.75);
+      border: 1px solid var(--border);
+      color: var(--moonlight);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.2s var(--ease-out);
+    }
+    .bg-pause:hover {
+      color: var(--edition-accent);
+      border-color: var(--edition-accent);
+      transform: scale(1.05);
+    }
+
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--void); }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 5px;
+      border: 2px solid var(--void);
+    }
+
+    /* ── NAV ──────────────────────────────────────────────────── */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 50;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(9, 7, 16, 0.55);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(51, 35, 61, 0.4);
+    }
+
+    .nav__brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--frost); }
+    .nav__logo {
+      width: 32px; height: 32px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--edition-accent), var(--edition-highlight));
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-heading); font-weight: 700; font-size: 14px;
+      color: #1a0f1e; box-shadow: 0 0 20px var(--edition-glow);
+    }
+    .nav__title { font-family: var(--font-heading); font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+
+    .nav__links { display: none; gap: 24px; font-size: 14px; }
+    .nav__link {
+      color: var(--moonlight); text-decoration: none;
+      transition: color 0.2s var(--ease-out);
+    }
+    .nav__link:hover { color: var(--frost); }
+
+    @media (min-width: 900px) {
+      .nav__links { display: flex; }
+    }
+
+    /* ── SWITCHER ─────────────────────────────────────────────── */
+    .switcher {
+      position: fixed;
+      top: 61px; left: 0; right: 0;
+      z-index: 49;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: rgba(9, 7, 16, 0.65);
+      border-bottom: 1px solid rgba(51, 35, 61, 0.4);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .switcher__edition {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(18, 13, 28, 0.5);
+      color: var(--moonlight);
+      text-decoration: none;
+      font-family: var(--font-body);
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .switcher__edition:hover {
+      border-color: var(--border);
+      background: rgba(18, 13, 28, 0.8);
+      color: var(--frost);
+    }
+
+    .switcher__edition--active {
+      border-color: var(--edition-accent);
+      background: var(--edition-glow);
+    }
+
+    .switcher__mark { font-size: 11px; opacity: 0.7; }
+    .switcher__edition--active .switcher__mark { color: var(--edition-accent); opacity: 1; }
+
+    .switcher__label {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.25;
+    }
+    .switcher__label strong { font-size: 13px; font-weight: 600; color: var(--frost); }
+    .switcher__label small { font-size: 10px; color: var(--moonlight); letter-spacing: 0.02em; }
+
+    /* ── DOCS LAYOUT ──────────────────────────────────────────── */
+    .docs {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 140px 24px 96px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 48px;
+    }
+
+    @media (min-width: 1024px) {
+      .docs { grid-template-columns: 220px 1fr 200px; gap: 56px; }
+    }
+
+    /* ── SIDEBAR ──────────────────────────────────────────────── */
+    .sidebar {
+      position: sticky;
+      top: 120px;
+      align-self: start;
+      max-height: calc(100vh - 140px);
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+
+    .sidebar__label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--moonlight);
+      margin: 0 0 12px;
+      padding-left: 10px;
+    }
+
+    .sidebar__link {
+      display: block;
+      padding: 6px 10px;
+      font-size: 13.5px;
+      color: var(--moonlight);
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      transition: all 0.15s var(--ease-out);
+      border-radius: 0 6px 6px 0;
+    }
+
+    .sidebar__link:hover {
+      color: var(--frost);
+      background: rgba(197, 184, 242, 0.05);
+    }
+
+    .sidebar__link--active {
+      color: var(--edition-accent);
+      border-left-color: var(--edition-accent);
+      background: rgba(197, 184, 242, 0.08);
+    }
+
+    /* ── CONTENT ──────────────────────────────────────────────── */
+    .content {
+      min-width: 0;
+    }
+
+    .doc-header {
+      padding-bottom: 32px;
+      margin-bottom: 40px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .doc-header__eyebrow {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--edition-accent);
+      background: var(--edition-glow);
+      border: 1px solid rgba(197, 184, 242, 0.25);
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+    }
+
+    .doc-header h1 {
+      font-family: var(--font-heading);
+      font-size: clamp(2rem, 4vw, 2.75rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      font-weight: 700;
+      color: var(--frost);
+      margin: 0 0 12px;
+    }
+
+    .doc-header h1 em { font-style: normal; color: var(--edition-accent); }
+
+    .doc-header p {
+      color: var(--moonlight);
+      font-size: 1.0625rem;
+      margin: 0;
+      max-width: 65ch;
+    }
+
+    /* ── TYPOGRAPHY ───────────────────────────────────────────── */
+    .content h2 {
+      font-family: var(--font-heading);
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--frost);
+      margin: 56px 0 16px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      scroll-margin-top: 140px;
+    }
+
+    .content h2:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+
+    .content h3 {
+      font-family: var(--font-heading);
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--frost);
+      margin: 32px 0 12px;
+      scroll-margin-top: 140px;
+    }
+
+    .content p {
+      color: var(--moonlight);
+      margin: 0 0 16px;
+      line-height: 1.75;
+    }
+
+    .content p strong { color: var(--frost); font-weight: 600; }
+
+    .content a {
+      color: var(--edition-accent);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(197, 184, 242, 0.3);
+      transition: border-color 0.2s var(--ease-out);
+    }
+    .content a:hover { border-bottom-color: var(--edition-accent); }
+
+    .content ul, .content ol {
+      color: var(--moonlight);
+      padding-left: 24px;
+      margin: 0 0 16px;
+    }
+
+    .content li {
+      margin-bottom: 6px;
+      line-height: 1.7;
+    }
+
+    .content li strong { color: var(--frost); }
+
+    .content code {
+      font-family: var(--font-mono);
+      font-size: 0.86em;
+      color: var(--edition-highlight);
+      background: rgba(227, 220, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* ── CODE BLOCK ───────────────────────────────────────────── */
+    .code {
+      background: rgba(9, 7, 16, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 16px 0 24px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .code__head {
+      padding: 8px 14px;
+      background: rgba(18, 13, 28, 0.6);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--moonlight);
+    }
+
+    .code__lang {
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--edition-glow);
+      color: var(--edition-accent);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .code__body {
+      padding: 16px 20px;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      line-height: 1.7;
+      color: var(--moonlight);
+      overflow-x: auto;
+    }
+
+    .code__body p { margin: 0; }
+
+    .kw  { color: var(--edition-accent); font-weight: 600; }
+    .fn  { color: var(--wisteria); }
+    .num { color: var(--bloom); }
+    .str { color: #FFBD2E; }
+    .cm  { color: rgba(183, 174, 199, 0.5); font-style: italic; }
+    .type { color: var(--edition-highlight); }
+
+    /* ── CALLOUTS ─────────────────────────────────────────────── */
+    .callout {
+      padding: 16px 20px;
+      background: rgba(197, 184, 242, 0.04);
+      border-left: 2px solid var(--edition-accent);
+      border-radius: 0 8px 8px 0;
+      margin: 20px 0;
+    }
+
+    .callout--info {
+      background: rgba(185, 160, 255, 0.04);
+      border-left-color: var(--wisteria);
+    }
+
+    .callout--green {
+      background: rgba(110, 231, 168, 0.04);
+      border-left-color: var(--green);
+    }
+
+    .callout__title {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--edition-accent);
+      margin: 0 0 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .callout--info .callout__title { color: var(--wisteria); }
+    .callout--green .callout__title { color: var(--green); }
+
+    .callout p { margin: 0; font-size: 0.9rem; }
+
+    /* ── TABLE ────────────────────────────────────────────────── */
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0 24px;
+      font-size: 0.9rem;
+    }
+
+    .table th {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--edition-accent);
+    }
+
+    .table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(51, 35, 61, 0.4);
+      color: var(--moonlight);
+    }
+
+    .table td code {
+      font-size: 0.84em;
+    }
+
+    /* ── RIGHT TOC ────────────────────────────────────────────── */
+    .toc {
+      position: sticky;
+      top: 120px;
+      align-self: start;
+      max-height: calc(100vh - 140px);
+      overflow-y: auto;
+      font-size: 12.5px;
+      display: none;
+    }
+
+    @media (min-width: 1024px) {
+      .toc { display: block; }
+    }
+
+    .toc__label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--moonlight);
+      margin: 0 0 10px;
+    }
+
+    .toc a {
+      display: block;
+      padding: 4px 0;
+      color: var(--moonlight);
+      text-decoration: none;
+      transition: color 0.15s var(--ease-out);
+    }
+
+    .toc a:hover { color: var(--edition-accent); }
+
+    /* ── PAGE NAV ─────────────────────────────────────────────── */
+    .page-nav {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 64px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    .page-nav__item {
+      padding: 16px 20px;
+      background: rgba(18, 13, 28, 0.5);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      text-decoration: none;
+      transition: all 0.2s var(--ease-out);
+      flex: 1;
+    }
+
+    .page-nav__item:hover {
+      border-color: var(--edition-accent);
+    }
+
+    .page-nav__label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--moonlight);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .page-nav__title {
+      font-family: var(--font-heading);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--frost);
+    }
+
+    .page-nav__item--next { text-align: right; }
+
+    /* ── FOOTER ───────────────────────────────────────────────── */
+    footer {
+      padding: 48px 24px;
+      border-top: 1px solid var(--border);
+      background: rgba(9, 7, 16, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .footer__inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    @media (min-width: 768px) {
+      .footer__inner { flex-direction: row; justify-content: space-between; }
+    }
+
+    .footer__brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--font-heading);
+      font-weight: 600;
+      color: var(--frost);
+    }
+
+    .footer__meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--moonlight);
+      letter-spacing: 0.04em;
+    }
+
+    .footer__links { display: flex; gap: 20px; font-size: 13px; }
+    .footer__links a {
+      color: var(--moonlight); text-decoration: none;
+      transition: color 0.2s var(--ease-out);
+    }
+    .footer__links a:hover { color: var(--edition-accent); }
+
+    @media (max-width: 640px) {
+      .docs { padding: 130px 16px 64px; }
+      .sidebar { position: static; max-height: none; }
+      .bg-pause { bottom: 16px; right: 16px; }
+    }
+  </style>
+</head>
+<body data-engine-edition="cpp">
+
+  <div class="bg-layer"></div>
+  <video class="bg-video" id="bg-video" autoplay muted loop playsinline preload="auto">
+    <source src="bkg.mp4" type="video/mp4">
+  </video>
+  <div class="bg-vignette"></div>
+
+  <button class="bg-pause" id="bg-pause" aria-label="Pause background video">
+    <i class="fas fa-pause" id="bg-pause-icon"></i>
+  </button>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="index.html" class="nav__brand">
+      <div class="nav__logo">L</div>
+      <span class="nav__title">Luma Engine</span>
+    </a>
+    <div class="nav__links">
+      <a href="cpp.html" class="nav__link">Overview</a>
+      <a href="cpp.html#architecture" class="nav__link">Architecture</a>
+      <a href="cpp.html#features" class="nav__link">Features</a>
+      <a href="docs-cpp.html" class="nav__link" style="color: var(--edition-accent)">Docs</a>
+      <a href="download-cpp.html" class="nav__link">Download</a>
+      <a href="changelog.html" class="nav__link">Changelog</a>
+    </div>
+  </nav>
+
+  <!-- SWITCHER -->
+  <nav class="switcher" aria-label="Choose an engine edition">
+    <a href="cpp.html" class="switcher__edition switcher__edition--active" aria-current="page">
+      <span class="switcher__mark">◇</span>
+      <span class="switcher__label">
+        <strong>Luma Engine C++</strong>
+        <small>Classic edition</small>
+      </span>
+    </a>
+    <a href="rust.html" class="switcher__edition">
+      <span class="switcher__mark">◈</span>
+      <span class="switcher__label">
+        <strong>Luma Engine Rust</strong>
+        <small>Rust edition</small>
+      </span>
+    </a>
+  </nav>
+
+  <div class="docs">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar__label">C++ Documentation</div>
+      <a href="#introduction" class="sidebar__link sidebar__link--active">Introduction</a>
+      <a href="#requirements" class="sidebar__link">System requirements</a>
+      <a href="#build" class="sidebar__link">Building from source</a>
+      <a href="#project-structure" class="sidebar__link">Project structure</a>
+      <a href="#runtime" class="sidebar__link">Runtime loop</a>
+      <a href="#love-vm" class="sidebar__link">LOVE scripting</a>
+      <a href="#dimension-l" class="sidebar__link">Dimension L</a>
+      <a href="#scene-system" class="sidebar__link">Scene system</a>
+      <a href="#editor" class="sidebar__link">Editor</a>
+      <a href="#assets" class="sidebar__link">Asset pipeline</a>
+      <a href="#input" class="sidebar__link">Input</a>
+      <a href="#audio" class="sidebar__link">Audio</a>
+      <a href="#limitations" class="sidebar__link">Current limitations</a>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="content">
+
+      <header class="doc-header">
+        <div class="doc-header__eyebrow">C++ Edition · Documentation</div>
+        <h1>Building on <em>Luma Engine C++</em>.</h1>
+        <p>
+          Everything you need to understand, build, and extend the C++ edition of Luma Engine. Written against the current <code>v0.1.0-alpha</code> build. If something here is a roadmap promise rather than a shipped feature, it will say so explicitly.
+        </p>
+      </header>
+
+      <!-- Introduction -->
+      <h2 id="introduction">Introduction</h2>
+      <p>
+        Luma Engine C++ is a compact, CPU-first game engine written in modern C++20. It ships with an integrated editor, a software rasterizer, a custom scripting language, and a scene graph. It runs on Linux today; Windows and macOS are on the development path.
+      </p>
+      <p>
+        It is deliberately not a general-purpose engine. It targets a specific kind of project: <strong>games that value simplicity, deterministic behaviour, and low hardware requirements</strong>. If you want a hardware-accelerated renderer with a million third-party extensions, this is not it — and that's the point.
+      </p>
+
+      <div class="callout callout--green">
+        <div class="callout__title"><i class="fas fa-check-circle"></i> Status</div>
+        <p>Everything documented in this page is implemented and shipping in <code>v0.1.0-alpha</code>. Items that are planned but not yet present are marked under <a href="#limitations">Current limitations</a>.</p>
+      </div>
+
+      <!-- Requirements -->
+      <h2 id="requirements">System requirements</h2>
+      <p>
+        The C++ edition is CPU-only. No dedicated GPU required. The engine compiles on Linux natively; cross-platform builds require further development.
+      </p>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Minimum</th>
+            <th>Recommended</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>OS</td>
+            <td>Ubuntu 20.04 / Debian 11</td>
+            <td>Ubuntu 22.04+</td>
+          </tr>
+          <tr>
+            <td>CPU</td>
+            <td>Dual-core x86_64</td>
+            <td>Quad-core x86_64</td>
+          </tr>
+          <tr>
+            <td>RAM</td>
+            <td>2 GB</td>
+            <td>4 GB</td>
+          </tr>
+          <tr>
+            <td>GPU</td>
+            <td>Not required</td>
+            <td>Not required</td>
+          </tr>
+          <tr>
+            <td>Compiler</td>
+            <td>GCC 11+ / Clang 13+</td>
+            <td>GCC 13+</td>
+          </tr>
+          <tr>
+            <td>Build system</td>
+            <td>CMake 3.20+</td>
+            <td>CMake 3.25+</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Build -->
+      <h2 id="build">Building from source</h2>
+      <p>
+        The C++ edition builds with CMake. All third-party dependencies (SDL3, Dear ImGui, stb_image) are vendored in the repository — you don't need to install anything globally.
+      </p>
+
+      <div class="code">
+        <div class="code__head">
+          <span>Terminal</span>
+          <span class="code__lang">Shell</span>
+        </div>
+        <div class="code__body">
+          <p><span class="cm"># Clone the repository</span></p>
+          <p><span class="fn">git</span> clone https://github.com/LumaGameEngine/Luma_Engine.git</p>
+          <p><span class="fn">cd</span> Luma_Engine</p>
+          <p>&nbsp;</p>
+          <p><span class="cm"># Configure with CMake</span></p>
+          <p><span class="fn">mkdir</span> build &amp;&amp; <span class="fn">cd</span> build</p>
+          <p><span class="fn">cmake</span> ..</p>
+          <p>&nbsp;</p>
+          <p><span class="cm"># Build (uses all cores)</span></p>
+          <p><span class="fn">make</span> -j$(nproc)</p>
+        </div>
+      </div>
+
+      <p>
+        The first build takes a few minutes because it compiles SDL3 and ImGui from source. Subsequent builds are incremental.
+      </p>
+
+      <!-- Project structure -->
+      <h2 id="project-structure">Project structure</h2>
+      <p>
+        The repository is organized around subsystems. Each one lives in its own directory and has no circular dependencies.
+      </p>
+
+      <div class="code">
+        <div class="code__head">
+          <span>Luma_Engine/</span>
+          <span class="code__lang">Tree</span>
+        </div>
+        <div class="code__body">
+          <p><span class="type">Luma_Engine/</span></p>
+          <p>├── <span class="type">src/</span></p>
+          <p>│&nbsp;&nbsp;&nbsp;├── <span class="fn">core/</span>           <span class="cm">// runtime, main loop</span></p>
+          <p>│&nbsp;&nbsp;&nbsp;├── <span class="fn">editor/</span>         <span class="cm">// Dear ImGui editor</span></p>
+          <p>│&nbsp;&nbsp;&nbsp;├── <span class="fn">love/</span>           <span class="cm">// LOVE VM, compiler</span></p>
+          <p>│&nbsp;&nbsp;&nbsp;├── <span class="fn">scene/</span>          <span class="cm">// nodes, transforms</span></p>
+          <p>│&nbsp;&nbsp;&nbsp;├── <span class="fn">render/</span>         <span class="cm">// Dimension L</span></p>
+          <p>│&nbsp;&nbsp;&nbsp;├── <span class="fn">assets/</span>         <span class="cm">// AssetManager</span></p>
+          <p>│&nbsp;&nbsp;&nbsp;├── <span class="fn">audio/</span>          <span class="cm">// SDL3 audio</span></p>
+          <p>│&nbsp;&nbsp;&nbsp;└── <span class="fn">platform/</span>       <span class="cm">// SDL3 wrapper</span></p>
+          <p>├── <span class="type">include/</span></p>
+          <p>├── <span class="type">third_party/</span></p>
+          <p>│&nbsp;&nbsp;&nbsp;├── SDL3/</p>
+          <p>│&nbsp;&nbsp;&nbsp;├── imgui/</p>
+          <p>│&nbsp;&nbsp;&nbsp;└── stb/</p>
+          <p>├── <span class="type">CMakeLists.txt</span></p>
+          <p>└── <span class="type">README.md</span></p>
+        </div>
+      </div>
+
+      <!-- Runtime loop -->
+      <h2 id="runtime">Runtime loop</h2>
+      <p>
+        The runtime runs the main game loop at a target of 60 FPS. Each frame:
+      </p>
+      <ol>
+        <li>Poll SDL3 events into the InputManager.</li>
+        <li>Update the scene graph (propagate transforms).</li>
+        <li>Execute up to <code>100</code> LOVE VM instructions (the instruction budget).</li>
+        <li>Render the current frame through Dimension L.</li>
+        <li>Swap buffers via SDL3.</li>
+      </ol>
+      <p>
+        The instruction budget exists so that a script cannot starve the editor's UI or the renderer. If your script needs more than 100 instructions per frame, it is doing too much; break it into smaller state updates.
+      </p>
+
+      <div class="callout">
+        <div class="callout__title"><i class="fas fa-info-circle"></i> Why a budget?</div>
+        <p>An unbounded script could lock the editor. The budget is a hard limit — if a script exceeds it, the runtime pauses the VM and reports the overrun in the editor's console. This is intentional, not a bug.</p>
+      </div>
+
+      <!-- LOVE VM -->
+      <h2 id="love-vm">LOVE scripting</h2>
+      <p>
+        <strong>LOVE</strong> (Luma Object &amp; Virtual-machine Environment) is the C++ edition's scripting language. It compiles to bytecode and runs on a stack-based VM. See the <a href="docs-cpp.html#love-vm">LOVE language reference</a> for the full instruction set and syntax.
+      </p>
+      <p>
+        The VM lives in <code>src/love/</code> and exposes its API to the editor and the game runtime. It is sandboxed — scripts cannot access raw memory or filesystem APIs.
+      </p>
+
+      <div class="code">
+        <div class="code__head">
+          <span>game.love</span>
+          <span class="code__lang">LOVE</span>
+        </div>
+        <div class="code__body">
+          <p><span class="kw">let</span> score <span class="num">0</span></p>
+          <p><span class="kw">let</span> x <span class="num">433</span></p>
+          <p><span class="kw">let</span> y <span class="num">285</span></p>
+          <p>&nbsp;</p>
+          <p><span class="kw">loop</span></p>
+          <p>&nbsp;&nbsp;<span class="fn">color</span> <span class="num">20 20 40</span></p>
+          <p>&nbsp;&nbsp;<span class="fn">clear</span></p>
+          <p>&nbsp;&nbsp;<span class="cm">// Game logic here</span></p>
+          <p>&nbsp;&nbsp;<span class="fn">present</span></p>
+          <p><span class="kw">end</span></p>
+        </div>
+      </div>
+
+      <!-- Dimension L -->
+      <h2 id="dimension-l">Dimension L</h2>
+      <p>
+        Dimension L is the rendering technology inside the C++ edition. It is a software rasterizer — every pixel is computed on the CPU. This is the architectural choice that lets the engine run without a dedicated GPU.
+      </p>
+
+      <h3>DL-V1 architecture</h3>
+      <p>
+        The current version of Dimension L is called <strong>DL-V1</strong>. It provides:
+      </p>
+      <ul>
+        <li>A framebuffer with a Z-buffer for depth testing.</li>
+        <li>Primitive drawing: pixel, line, triangle, rectangle, and circle (outlined and filled).</li>
+        <li>A camera system with view and projection matrices.</li>
+        <li>Colour management with per-primitive colour setting.</li>
+        <li>A viewport that maps to the editor's render panel or the full window.</li>
+      </ul>
+
+      <h3>Render graph</h3>
+      <p>
+        Dimension L supports a lightweight render graph. Passes declare reads and writes against named targets, and the graph resolves execution order. The current implementation is deliberately minimal — there is no automatic barrier insertion because there is no GPU to barrier.
+      </p>
+
+      <!-- Scene system -->
+      <h2 id="scene-system">Scene system</h2>
+      <p>
+        The scene graph is a tree of nodes. Every node has a local transform and a computed world transform. When a node's local transform changes, its world transform and those of all descendants are marked dirty and recomputed on the next frame.
+      </p>
+
+      <div class="code">
+        <div class="code__head">
+          <span>SceneNode.hpp</span>
+          <span class="code__lang">C++</span>
+        </div>
+        <div class="code__body">
+          <p><span class="kw">class</span> <span class="type">SceneNode</span> {</p>
+          <p><span class="kw">public</span>:</p>
+          <p>&nbsp;&nbsp;<span class="type">Vec3</span> position;</p>
+          <p>&nbsp;&nbsp;<span class="type">Vec3</span> rotation;</p>
+          <p>&nbsp;&nbsp;<span class="type">Vec3</span> scale{ <span class="num">1</span>, <span class="num">1</span>, <span class="num">1</span> };</p>
+          <p>&nbsp;</p>
+          <p>&nbsp;&nbsp;<span class="type">Mat4</span> <span class="fn">WorldTransform</span>() <span class="kw">const</span>;</p>
+          <p>&nbsp;&nbsp;<span class="kw">void</span> <span class="fn">AddChild</span>(std::<span class="type">unique_ptr</span>&lt;<span class="type">SceneNode</span>&gt; child);</p>
+          <p>&nbsp;</p>
+          <p><span class="kw">private</span>:</p>
+          <p>&nbsp;&nbsp;std::<span class="type">vector</span>&lt;std::<span class="type">unique_ptr</span>&lt;<span class="type">SceneNode</span>&gt;&gt; m_children;</p>
+          <p>&nbsp;&nbsp;<span class="type">SceneNode</span>* m_parent{ <span class="kw">nullptr</span> };</p>
+          <p>};</p>
+        </div>
+      </div>
+
+      <p>
+        Two concrete node types ship today: <code>SpriteNode</code> (a textured quad) and <code>ShapeNode</code> (a primitive with a colour). Both derive from <code>SceneNode</code>.
+      </p>
+
+      <!-- Editor -->
+      <h2 id="editor">Editor</h2>
+      <p>
+        The editor is built on Dear ImGui with docking support. It provides:
+      </p>
+      <ul>
+        <li>A viewport that renders the current scene through Dimension L.</li>
+        <li>A LOVE script editor with syntax highlighting.</li>
+        <li>A file and asset browser.</li>
+        <li>A property panel for the selected node.</li>
+        <li>A launcher screen for opening or creating projects.</li>
+        <li>A console for VM output and error reporting.</li>
+      </ul>
+
+      <div class="callout callout--info">
+        <div class="callout__title"><i class="fas fa-info-circle"></i> The editor is the launcher</div>
+        <p>There is no separate launcher binary in the C++ edition. The editor opens to a launcher screen, and from there you create or open a project. The Rust edition uses a separate launcher binary — see the <a href="rust.html">Rust edition</a> for that architecture.</p>
+      </div>
+
+      <!-- Assets -->
+      <h2 id="assets">Asset pipeline</h2>
+      <p>
+        The <code>AssetManager</code> handles loading, caching, and reference counting for textures. Supported formats today:
+      </p>
+      <ul>
+        <li><strong>PNG</strong> — via stb_image.</li>
+        <li><strong>JPG</strong> — via stb_image.</li>
+        <li><strong>WAV</strong> — via SDL3 audio.</li>
+      </ul>
+      <p>
+        Assets are identified by a UUID and cached by UUID. When a file on disk changes, the asset is marked dirty and reloaded on the next access.
+      </p>
+
+      <!-- Input -->
+      <h2 id="input">Input</h2>
+      <p>
+        Input is provided by SDL3 and routed through the engine's <code>InputManager</code>. Two paths are available:
+      </p>
+      <ul>
+        <li><strong>Polling</strong> — the runtime checks key states each frame. Used internally by LOVE's <code>key_down</code> instruction.</li>
+        <li><strong>Events</strong> — keyboard and mouse events are pushed to the editor and to registered listeners.</li>
+      </ul>
+      <p>
+        Gamepad support is not yet implemented. See <a href="#limitations">Current limitations</a>.
+      </p>
+
+      <!-- Audio -->
+      <h2 id="audio">Audio</h2>
+      <p>
+        The audio system uses SDL3's audio backend. It supports:
+      </p>
+      <ul>
+        <li>Loading WAV files into named channels.</li>
+        <li>Playing, pausing, and stopping a channel.</li>
+        <li>Setting master volume.</li>
+        <li>Per-channel volume (via the channel ID).</li>
+      </ul>
+
+      <div class="code">
+        <div class="code__head">
+          <span>audio.love</span>
+          <span class="code__lang">LOVE</span>
+        </div>
+        <div class="code__body">
+          <p><span class="fn">audio_load</span> <span class="str">"pop.wav"</span> <span class="str">"pop"</span></p>
+          <p><span class="fn">audio_play</span> <span class="str">"pop"</span></p>
+          <p><span class="fn">audio_set_volume</span> <span class="num">0.5</span></p>
+        </div>
+      </div>
+
+      <p>
+        Audio is not spatialised. It plays through the default output device. Spatial audio is under consideration but not implemented.
+      </p>
+
+      <!-- Limitations -->
+      <h2 id="limitations">Current limitations</h2>
+      <p>
+        Being honest about what is not done is as important as documenting what is. The following are known limitations as of <code>v0.1.0-alpha</code>:
+      </p>
+
+      <ul>
+        <li><strong>Linux only.</strong> Windows and macOS builds are planned but not shipped. The code compiles on Linux; the SDL3 and CMake configurations are Linux-centric.</li>
+        <li><strong>No hardware acceleration.</strong> Dimension L is a software rasterizer. This is a design choice, not a limitation, but it means the engine will not match the performance of GPU-based engines on large scenes.</li>
+        <li><strong>No gamepad support.</strong> Keyboard and mouse only in this version.</li>
+        <li><strong>No networking.</strong> Single-player only.</li>
+        <li><strong>No 3D rendering.</strong> Dimension L currently ships a 2D-oriented rasterizer. 3D primitives (triangles in 3D space, perspective-correct textures) are not implemented.</li>
+        <li><strong>No animations.</strong> Sprite animation is on the roadmap but not implemented.</li>
+        <li><strong>No particle system.</strong> Not implemented.</li>
+        <li><strong>No physics.</strong> LumaX is a separate project; see the <a href="index.html#technology">homepage</a> for its status.</li>
+        <li><strong>Limited asset formats.</strong> PNG, JPG, and WAV only. OGG, MP3, and sprite sheets are not supported yet.</li>
+        <li><strong>No scene serialization to disk.</strong> Projects can be created and edited but not yet saved.</li>
+      </ul>
+
+      <div class="callout">
+        <div class="callout__title"><i class="fas fa-exclamation-triangle"></i> Alpha software</div>
+        <p>The C++ edition is <code>v0.1.0-alpha</code>. It is functional but not production-ready. Do not use it for a commercial project without expecting to track the engine's development closely.</p>
+      </div>
+
+      <!-- Page nav -->
+      <nav class="page-nav">
+        <a href="cpp.html" class="page-nav__item">
+          <span class="page-nav__label">← Previous</span>
+          <span class="page-nav__title">C++ edition overview</span>
+        </a>
+        <a href="download-cpp.html" class="page-nav__item page-nav__item--next">
+          <span class="page-nav__label">Next →</span>
+          <span class="page-nav__title">Download &amp; pricing</span>
+        </a>
+      </nav>
+
+    </main>
+
+    <!-- RIGHT TOC -->
+    <aside class="toc">
+      <div class="toc__label">On this page</div>
+      <a href="#introduction">Introduction</a>
+      <a href="#requirements">System requirements</a>
+      <a href="#build">Building from source</a>
+      <a href="#project-structure">Project structure</a>
+      <a href="#runtime">Runtime loop</a>
+      <a href="#love-vm">LOVE scripting</a>
+      <a href="#dimension-l">Dimension L</a>
+      <a href="#scene-system">Scene system</a>
+      <a href="#editor">Editor</a>
+      <a href="#assets">Asset pipeline</a>
+      <a href="#input">Input</a>
+      <a href="#audio">Audio</a>
+      <a href="#limitations">Current limitations</a>
+    </aside>
+
+  </div>
+
+  <footer>
+    <div class="footer__inner">
+      <div class="footer__brand">
+        <div class="nav__logo">L</div>
+        <span>Luma Engine C++</span>
+      </div>
+      <div class="footer__meta">
+        © 2026 Luma Games · Documentation · v0.1.0-alpha
+      </div>
+      <div class="footer__links">
+        <a href="index.html">Home</a>
+        <a href="changelog.html">Changelog</a>
+        <a href="https://github.com/LumaGameEngine/Luma_Engine" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      // Background video pause/play
+      const video = document.getElementById('bg-video');
+      const btn = document.getElementById('bg-pause');
+      const icon = document.getElementById('bg-pause-icon');
+      if (video && btn && icon) {
+        video.addEventListener('error', () => { btn.style.display = 'none'; });
+        const checkSrc = video.querySelector('source');
+        if (checkSrc) checkSrc.addEventListener('error', () => { btn.style.display = 'none'; });
+        btn.addEventListener('click', () => {
+          if (video.paused) {
+            video.play().catch(() => {});
+            icon.classList.replace('fa-play', 'fa-pause');
+          } else {
+            video.pause();
+            icon.classList.replace('fa-pause', 'fa-play');
+          }
+        });
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          video.pause();
+          icon.classList.replace('fa-pause', 'fa-play');
+        }
+      }
+
+      // Sidebar active link tracking
+      const sections = document.querySelectorAll('h2[id]');
+      const links = document.querySelectorAll('.sidebar__link');
+      if (sections.length > 0 && links.length > 0 && 'IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const id = entry.target.getAttribute('id');
+              links.forEach(l => {
+                l.classList.toggle('sidebar__link--active', l.getAttribute('href') === '#' + id);
+              });
+            }
+          });
+        }, { rootMargin: '-120px 0px -70% 0px' });
+        sections.forEach(s => observer.observe(s));
+      }
+    })();
+  </script>
+
+</body>
+</html>

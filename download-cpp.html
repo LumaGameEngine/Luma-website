@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Download — Luma Engine C++</title>
+  <meta name="description" content="Download Luma Engine C++, the free and open-source classic edition. Available for Linux. Windows and macOS on the way.">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --void:        #090710;
+      --deep-plum:   #120D1C;
+      --sakura-dark: #211226;
+      --sakura-pink: #FF83C5;
+      --bloom:       #D8CEFF;
+      --wisteria:    #B9A0FF;
+      --frost:       #F4F0FA;
+      --moonlight:   #B7AEC7;
+      --border:      #33233D;
+      --green:       #6EE7A8;
+
+      --edition-accent:    #C5B8F2;
+      --edition-highlight: #E3DCFF;
+      --edition-glow:      rgba(197, 184, 242, 0.2);
+
+      --font-heading: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+      --font-body:    'Inter', 'Plus Jakarta Sans', sans-serif;
+      --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    html, body { margin: 0; padding: 0; }
+
+    body {
+      background: var(--void);
+      color: var(--frost);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      min-height: 100vh;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: -3;
+      pointer-events: none;
+      background-color: var(--void);
+      background-image: url('bkg.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .bg-video {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -2;
+      pointer-events: none;
+      opacity: 0.38;
+      filter: saturate(0.8) brightness(0.8);
+    }
+
+    .bg-vignette {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 30% 40%, rgba(9, 7, 16, 0.12) 0%, rgba(9, 7, 16, 0.45) 60%, rgba(9, 7, 16, 0.72) 100%),
+        linear-gradient(90deg, rgba(9, 7, 16, 0.65) 0%, rgba(9, 7, 16, 0.35) 42%, rgba(9, 7, 16, 0.1) 100%);
+    }
+
+    .bg-pause {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 100;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(18, 13, 28, 0.75);
+      border: 1px solid var(--border);
+      color: var(--moonlight);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.2s var(--ease-out);
+    }
+    .bg-pause:hover {
+      color: var(--edition-accent);
+      border-color: var(--edition-accent);
+      transform: scale(1.05);
+    }
+
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--void); }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 5px;
+      border: 2px solid var(--void);
+    }
+
+    /* ── NAV ──────────────────────────────────────────────────── */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 50;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(9, 7, 16, 0.55);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(51, 35, 61, 0.4);
+    }
+
+    .nav__brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--frost); }
+    .nav__logo {
+      width: 32px; height: 32px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--edition-accent), var(--edition-highlight));
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-heading); font-weight: 700; font-size: 14px;
+      color: #1a0f1e; box-shadow: 0 0 20px var(--edition-glow);
+    }
+    .nav__title { font-family: var(--font-heading); font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+
+    .nav__links { display: none; gap: 24px; font-size: 14px; }
+    .nav__link {
+      color: var(--moonlight); text-decoration: none;
+      transition: color 0.2s var(--ease-out);
+    }
+    .nav__link:hover { color: var(--frost); }
+
+    @media (min-width: 900px) {
+      .nav__links { display: flex; }
+    }
+
+    /* ── SWITCHER ─────────────────────────────────────────────── */
+    .switcher {
+      position: fixed;
+      top: 61px; left: 0; right: 0;
+      z-index: 49;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: rgba(9, 7, 16, 0.65);
+      border-bottom: 1px solid rgba(51, 35, 61, 0.4);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .switcher__edition {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(18, 13, 28, 0.5);
+      color: var(--moonlight);
+      text-decoration: none;
+      font-family: var(--font-body);
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .switcher__edition:hover {
+      border-color: var(--border);
+      background: rgba(18, 13, 28, 0.8);
+      color: var(--frost);
+    }
+
+    .switcher__edition--active {
+      border-color: var(--edition-accent);
+      background: var(--edition-glow);
+    }
+
+    .switcher__mark { font-size: 11px; opacity: 0.7; }
+    .switcher__edition--active .switcher__mark { color: var(--edition-accent); opacity: 1; }
+
+    .switcher__label {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.25;
+    }
+    .switcher__label strong { font-size: 13px; font-weight: 600; color: var(--frost); }
+    .switcher__label small { font-size: 10px; color: var(--moonlight); letter-spacing: 0.02em; }
+
+    /* ── PAGE ─────────────────────────────────────────────────── */
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── HERO ─────────────────────────────────────────────────── */
+    .hero {
+      padding: 200px 0 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      min-height: 40vh;
+      justify-content: center;
+    }
+
+    .hero__eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--edition-accent);
+      background: var(--edition-glow);
+      border: 1px solid rgba(197, 184, 242, 0.25);
+      padding: 6px 14px;
+      border-radius: 999px;
+      margin-bottom: 24px;
+    }
+
+    .hero__title {
+      font-family: var(--font-heading);
+      font-size: clamp(2.25rem, 5vw, 3.75rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+      color: var(--frost);
+      margin: 0 0 20px;
+      max-width: 720px;
+    }
+
+    .hero__title em { font-style: normal; color: var(--edition-accent); }
+
+    .hero__lede {
+      font-size: 1.0625rem;
+      color: var(--moonlight);
+      max-width: 620px;
+      margin: 0 0 24px;
+      line-height: 1.65;
+    }
+
+    .hero__badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge--free {
+      color: var(--green);
+      background: rgba(110, 231, 168, 0.08);
+      border: 1px solid rgba(110, 231, 168, 0.2);
+    }
+
+    .badge--oss {
+      color: var(--edition-accent);
+      background: var(--edition-glow);
+      border: 1px solid rgba(197, 184, 242, 0.25);
+    }
+
+    /* ── PLATFORMS ────────────────────────────────────────────── */
+    .platforms {
+      padding: 64px 0 96px;
+    }
+
+    .platform-grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 768px) {
+      .platform-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .platform {
+      position: relative;
+      padding: 36px 28px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: rgba(18, 13, 28, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s var(--ease-out);
+      overflow: hidden;
+    }
+
+    .platform::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--edition-accent);
+    }
+
+    .platform:hover {
+      transform: translateY(-3px);
+      border-color: var(--edition-accent);
+      box-shadow: 0 8px 40px var(--edition-glow);
+    }
+
+    .platform__icon {
+      width: 56px; height: 56px; border-radius: 14px;
+      background: var(--edition-glow);
+      border: 1px solid rgba(197, 184, 242, 0.25);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--edition-accent); font-size: 26px;
+      margin-bottom: 20px;
+    }
+
+    .platform__name {
+      font-family: var(--font-heading);
+      font-size: 1.5rem; font-weight: 700;
+      color: var(--frost); margin: 0 0 4px;
+      letter-spacing: -0.01em;
+    }
+
+    .platform__status {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+
+    .platform__status--ready {
+      color: var(--green);
+      background: rgba(110, 231, 168, 0.08);
+      border: 1px solid rgba(110, 231, 168, 0.2);
+    }
+
+    .platform__status--in-progress {
+      color: var(--wisteria);
+      background: rgba(185, 160, 255, 0.08);
+      border: 1px solid rgba(185, 160, 255, 0.2);
+    }
+
+    .platform__requirements {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--moonlight);
+      margin: 0 0 24px;
+      line-height: 1.7;
+    }
+
+    .platform__requirements span { display: block; }
+
+    .platform__cta {
+      margin-top: auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 24px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--edition-accent), var(--edition-highlight));
+      color: #1a0f1e;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+      box-shadow: 0 0 32px var(--edition-glow);
+    }
+
+    .platform__cta:hover { transform: translateY(-2px); }
+
+    .platform__cta--disabled {
+      background: rgba(18, 13, 28, 0.6);
+      color: var(--moonlight);
+      border: 1px solid var(--border);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .platform__cta--disabled:hover { transform: none; }
+
+    .platform__note {
+      margin-top: 12px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: rgba(183, 174, 199, 0.6);
+      text-align: center;
+    }
+
+    /* ── OPEN SOURCE SECTION ──────────────────────────────────── */
+    .oss {
+      padding: 96px 0;
+      scroll-margin-top: 140px;
+      border-top: 1px solid var(--border);
+      max-width: 880px;
+      margin: 0 auto;
+      display: grid;
+      gap: 40px;
+    }
+
+    @media (min-width: 768px) {
+      .oss { grid-template-columns: 1fr 1fr; }
+    }
+
+    .oss__title {
+      font-family: var(--font-heading);
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--frost);
+      margin: 0 0 16px;
+    }
+
+    .oss__title em { font-style: normal; color: var(--edition-accent); }
+
+    .oss__text {
+      color: var(--moonlight);
+      font-size: 0.94rem;
+      line-height: 1.75;
+      margin: 0 0 16px;
+    }
+
+    .oss__link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--edition-accent);
+      text-decoration: none;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      border-bottom: 1px solid rgba(197, 184, 242, 0.3);
+      transition: border-color 0.2s var(--ease-out);
+    }
+
+    .oss__link:hover { border-bottom-color: var(--edition-accent); }
+
+    .oss__cmd {
+      background: rgba(9, 7, 16, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--moonlight);
+      line-height: 1.8;
+      overflow-x: auto;
+    }
+
+    .oss__cmd .fn { color: var(--wisteria); }
+    .oss__cmd .cm { color: rgba(183, 174, 199, 0.5); }
+
+    /* ── FOOTER ───────────────────────────────────────────────── */
+    footer {
+      padding: 48px 24px;
+      border-top: 1px solid var(--border);
+      background: rgba(9, 7, 16, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .footer__inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    @media (min-width: 768px) {
+      .footer__inner { flex-direction: row; justify-content: space-between; }
+    }
+
+    .footer__brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--font-heading);
+      font-weight: 600;
+      color: var(--frost);
+    }
+
+    .footer__meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--moonlight);
+      letter-spacing: 0.04em;
+    }
+
+    .footer__links { display: flex; gap: 20px; font-size: 13px; }
+    .footer__links a {
+      color: var(--moonlight); text-decoration: none;
+      transition: color 0.2s var(--ease-out);
+    }
+    .footer__links a:hover { color: var(--edition-accent); }
+
+    @media (max-width: 640px) {
+      .hero { padding: 180px 0 48px; }
+      .bg-pause { bottom: 16px; right: 16px; }
+    }
+  </style>
+</head>
+<body data-engine-edition="cpp">
+
+  <div class="bg-layer"></div>
+  <video class="bg-video" id="bg-video" autoplay muted loop playsinline preload="auto">
+    <source src="bkg.mp4" type="video/mp4">
+  </video>
+  <div class="bg-vignette"></div>
+
+  <button class="bg-pause" id="bg-pause" aria-label="Pause background video">
+    <i class="fas fa-pause" id="bg-pause-icon"></i>
+  </button>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="index.html" class="nav__brand">
+      <div class="nav__logo">L</div>
+      <span class="nav__title">Luma Engine</span>
+    </a>
+    <div class="nav__links">
+      <a href="cpp.html" class="nav__link">Overview</a>
+      <a href="cpp.html#architecture" class="nav__link">Architecture</a>
+      <a href="cpp.html#features" class="nav__link">Features</a>
+      <a href="docs-cpp.html" class="nav__link">Docs</a>
+      <a href="download-cpp.html" class="nav__link" style="color: var(--edition-accent)">Download</a>
+      <a href="changelog.html" class="nav__link">Changelog</a>
+    </div>
+  </nav>
+
+  <!-- SWITCHER -->
+  <nav class="switcher" aria-label="Choose an engine edition">
+    <a href="cpp.html" class="switcher__edition switcher__edition--active" aria-current="page">
+      <span class="switcher__mark">◇</span>
+      <span class="switcher__label">
+        <strong>Luma Engine C++</strong>
+        <small>Classic edition</small>
+      </span>
+    </a>
+    <a href="rust.html" class="switcher__edition">
+      <span class="switcher__mark">◈</span>
+      <span class="switcher__label">
+        <strong>Luma Engine Rust</strong>
+        <small>Rust edition</small>
+      </span>
+    </a>
+  </nav>
+
+  <main class="page">
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero__eyebrow">
+        <i class="fas fa-download"></i> C++ Edition · Download
+      </div>
+      <h1 class="hero__title">
+        Get <em>Luma Engine C++</em>.
+      </h1>
+      <p class="hero__lede">
+        The classic edition is free and open source. Prebuilt downloads are not available yet; you can review the source-build instructions below.
+      </p>
+      <div class="hero__badges">
+        <span class="badge badge--free"><i class="fas fa-gift"></i> Free</span>
+        <span class="badge badge--oss"><i class="fab fa-github"></i> Open source</span>
+      </div>
+    </section>
+
+    <!-- PLATFORMS -->
+    <section class="platforms" aria-label="Platform availability">
+      <div class="platform-grid">
+
+        <!-- Linux -->
+        <div class="platform">
+          <div class="platform__icon">
+            <i class="fab fa-linux"></i>
+          </div>
+          <h2 class="platform__name">Linux</h2>
+          <span class="platform__status platform__status--in-progress">Source build</span>
+          <p class="platform__requirements">
+            <span>Linux build instructions below</span>
+            <span>No prebuilt release published yet</span>
+          </p>
+          <a href="#source-build" class="platform__cta">
+            <i class="fas fa-terminal"></i> View build instructions
+          </a>
+          <p class="platform__note">Build the engine from source</p>
+        </div>
+
+        <!-- Windows -->
+        <div class="platform">
+          <div class="platform__icon">
+            <i class="fab fa-windows"></i>
+          </div>
+          <h2 class="platform__name">Windows</h2>
+          <span class="platform__status platform__status--in-progress">In progress</span>
+          <p class="platform__requirements">
+            <span>Windows 10 / 11</span>
+            <span>x86_64 · static build</span>
+            <span>Build not yet shipped</span>
+            <span>Coming soon</span>
+          </p>
+          <span class="platform__cta platform__cta--disabled" aria-disabled="true">
+            <i class="fas fa-clock"></i> Coming soon
+          </span>
+          <p class="platform__note">Follow the repo for release updates</p>
+        </div>
+
+        <!-- macOS -->
+        <div class="platform">
+          <div class="platform__icon">
+            <i class="fab fa-apple"></i>
+          </div>
+          <h2 class="platform__name">macOS</h2>
+          <span class="platform__status platform__status--in-progress">In progress</span>
+          <p class="platform__requirements">
+            <span>macOS 12.0+</span>
+            <span>Apple Silicon · universal</span>
+            <span>Build not yet shipped</span>
+            <span>Coming soon</span>
+          </p>
+          <span class="platform__cta platform__cta--disabled" aria-disabled="true">
+            <i class="fas fa-clock"></i> Coming soon
+          </span>
+          <p class="platform__note">Follow the repo for release updates</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- OPEN SOURCE -->
+    <section class="oss" id="source-build">
+      <div>
+        <h2 class="oss__title">Free and <em>open source.</em></h2>
+        <p class="oss__text">
+          The C++ edition is released under an open-source license. You can read the source, modify it, and build it yourself. The repository is public and welcomes contributions.
+        </p>
+        <a href="https://github.com/LumaGameEngine/Luma_Engine" target="_blank" rel="noopener" class="oss__link">
+          View on GitHub <i class="fas fa-arrow-right"></i>
+        </a>
+        <br><br>
+        <a href="https://github.com/LumaGameEngine/Luma_Engine/blob/main/LICENSE" target="_blank" rel="noopener" class="oss__link">
+          Read the license <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+
+      <div>
+        <p class="oss__text" style="margin-bottom:12px;">Build from source:</p>
+        <div class="oss__cmd">
+          <div class="cm"># Clone and build</div>
+          <div><span class="fn">git</span> clone https://github.com/LumaGameEngine/Luma_Engine.git</div>
+          <div><span class="fn">cd</span> Luma_Engine</div>
+          <div><span class="fn">mkdir</span> build &amp;&amp; <span class="fn">cd</span> build</div>
+          <div><span class="fn">cmake</span> ..</div>
+          <div><span class="fn">make</span> -j$(nproc)</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="footer__inner">
+      <div class="footer__brand">
+        <div class="nav__logo">L</div>
+        <span>Luma Engine C++</span>
+      </div>
+      <div class="footer__meta">
+        © 2026 Luma Games · Classic edition · Open source
+      </div>
+      <div class="footer__links">
+        <a href="index.html">Home</a>
+        <a href="changelog.html">Changelog</a>
+        <a href="https://github.com/LumaGameEngine/Luma_Engine" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      const video = document.getElementById('bg-video');
+      const btn = document.getElementById('bg-pause');
+      const icon = document.getElementById('bg-pause-icon');
+      if (video && btn && icon) {
+        video.addEventListener('error', () => { btn.style.display = 'none'; });
+        const checkSrc = video.querySelector('source');
+        if (checkSrc) checkSrc.addEventListener('error', () => { btn.style.display = 'none'; });
+        btn.addEventListener('click', () => {
+          if (video.paused) {
+            video.play().catch(() => {});
+            icon.classList.replace('fa-play', 'fa-pause');
+          } else {
+            video.pause();
+            icon.classList.replace('fa-pause', 'fa-play');
+          }
+        });
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          video.pause();
+          icon.classList.replace('fa-pause', 'fa-play');
+        }
+      }
+    })();
+  </script>
+
+</body>
+</html>

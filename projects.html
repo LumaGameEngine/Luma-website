@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projects — Luma Games</title>
+  <meta name="description" content="Games built on Luma Engine. LUMARA: The Last Sky Garden, Octo Spacers, and other projects from Luma Games.">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --void:        #090710;
+      --deep-plum:   #120D1C;
+      --sakura-dark: #211226;
+      --sakura-pink: #FF83C5;
+      --bloom:       #FFA9D7;
+      --wisteria:    #B9A0FF;
+      --frost:       #F4F0FA;
+      --moonlight:   #B7AEC7;
+      --border:      #33233D;
+      --green:       #6EE7A8;
+
+      --font-heading: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+      --font-body:    'Inter', 'Plus Jakarta Sans', sans-serif;
+      --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    html, body { margin: 0; padding: 0; }
+
+    body {
+      background: var(--void);
+      color: var(--frost);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background-color: var(--void);
+      background-image: url('bkg.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .bg-video {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.4;
+      filter: saturate(0.85) brightness(0.8);
+    }
+
+    .bg-vignette {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 30% 40%, rgba(9, 7, 16, 0.4) 0%, rgba(9, 7, 16, 0.8) 60%, rgba(9, 7, 16, 0.94) 100%),
+        linear-gradient(90deg, rgba(9, 7, 16, 0.95) 0%, rgba(9, 7, 16, 0.75) 42%, rgba(9, 7, 16, 0.3) 100%);
+    }
+
+    .bg-pause {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 100;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(18, 13, 28, 0.75);
+      border: 1px solid var(--border);
+      color: var(--moonlight);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.2s var(--ease-out);
+    }
+    .bg-pause:hover {
+      color: var(--sakura-pink);
+      border-color: var(--sakura-pink);
+      transform: scale(1.05);
+    }
+
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--void); }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 5px;
+      border: 2px solid var(--void);
+    }
+
+    /* ── NAV ──────────────────────────────────────────────────── */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 50;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(9, 7, 16, 0.55);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(51, 35, 61, 0.4);
+    }
+
+    .nav__brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--frost); }
+    .nav__logo {
+      width: 32px; height: 32px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--sakura-pink), var(--wisteria));
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-heading); font-weight: 700; font-size: 14px;
+      color: #1a0f1e; box-shadow: 0 0 20px rgba(255, 131, 197, 0.25);
+    }
+    .nav__title { font-family: var(--font-heading); font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+
+    .nav__links { display: none; gap: 24px; font-size: 14px; }
+    .nav__link {
+      color: var(--moonlight); text-decoration: none;
+      transition: color 0.2s var(--ease-out);
+    }
+    .nav__link:hover { color: var(--frost); }
+    .nav__link--active { color: var(--frost); }
+
+    @media (min-width: 900px) {
+      .nav__links { display: flex; }
+    }
+
+    /* ── PAGE ─────────────────────────────────────────────────── */
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── HERO ─────────────────────────────────────────────────── */
+    .hero {
+      padding: 200px 0 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      min-height: 40vh;
+      justify-content: center;
+    }
+
+    .hero__eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--sakura-pink);
+      background: rgba(255, 131, 197, 0.08);
+      border: 1px solid rgba(255, 131, 197, 0.15);
+      padding: 6px 14px;
+      border-radius: 999px;
+      margin-bottom: 24px;
+    }
+
+    .hero__title {
+      font-family: var(--font-heading);
+      font-size: clamp(2.25rem, 5vw, 3.75rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+      color: var(--frost);
+      margin: 0 0 20px;
+      max-width: 780px;
+    }
+
+    .hero__title em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--sakura-pink), var(--wisteria));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero__lede {
+      font-size: 1.0625rem;
+      color: var(--moonlight);
+      max-width: 620px;
+      margin: 0;
+      line-height: 1.65;
+    }
+
+    /* ── PROJECTS ─────────────────────────────────────────────── */
+    .projects {
+      padding: 32px 0 96px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .project {
+      position: relative;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      background: rgba(18, 13, 28, 0.65);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      overflow: hidden;
+      transition: all 0.3s var(--ease-out);
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 900px) {
+      .project { grid-template-columns: 1.2fr 1fr; }
+    }
+
+    .project:hover {
+      border-color: rgba(255, 131, 197, 0.3);
+      box-shadow: 0 8px 48px rgba(255, 131, 197, 0.08);
+    }
+
+    .project__media {
+      position: relative;
+      min-height: 280px;
+      background: linear-gradient(135deg, var(--sakura-dark), var(--deep-plum));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .project__media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      inset: 0;
+    }
+
+    .project__media-placeholder {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 24px;
+    }
+
+    .project__media-icon {
+      font-size: 56px;
+      color: rgba(255, 169, 215, 0.35);
+      margin-bottom: 12px;
+    }
+
+    .project__media-name {
+      font-family: var(--font-heading);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: rgba(244, 240, 250, 0.35);
+      letter-spacing: -0.01em;
+    }
+
+    .project__media-note {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: rgba(183, 174, 199, 0.35);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    .project__body {
+      padding: 40px 36px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .project__status {
+      display: inline-block;
+      align-self: flex-start;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 3px 10px;
+      border-radius: 999px;
+      margin-bottom: 20px;
+    }
+
+    .project__status--dev {
+      color: var(--wisteria);
+      background: rgba(185, 160, 255, 0.08);
+      border: 1px solid rgba(185, 160, 255, 0.2);
+    }
+
+    .project__status--soon {
+      color: var(--moonlight);
+      background: rgba(183, 174, 199, 0.08);
+      border: 1px solid rgba(183, 174, 199, 0.2);
+    }
+
+    .project__title {
+      font-family: var(--font-heading);
+      font-size: clamp(1.75rem, 3vw, 2.25rem);
+      font-weight: 700;
+      color: var(--frost);
+      margin: 0 0 12px;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .project__tagline {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--sakura-pink);
+      margin: 0 0 20px;
+      letter-spacing: 0.02em;
+    }
+
+    .project__desc {
+      color: var(--moonlight);
+      font-size: 0.94rem;
+      line-height: 1.75;
+      margin: 0 0 24px;
+    }
+
+    .project__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .project__tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--moonlight);
+      padding: 3px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(9, 7, 16, 0.5);
+    }
+
+    .project__engine {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--moonlight);
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .project__engine i { color: var(--sakura-pink); }
+
+    .project__engine a {
+      color: var(--sakura-pink);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255, 131, 197, 0.3);
+      transition: border-color 0.2s var(--ease-out);
+    }
+
+    .project__engine a:hover { border-bottom-color: var(--sakura-pink); }
+
+    /* ── ABOUT SECTION ────────────────────────────────────────── */
+    .about {
+      padding: 96px 0;
+      border-top: 1px solid var(--border);
+      max-width: 720px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .about__title {
+      font-family: var(--font-heading);
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 700;
+      color: var(--frost);
+      margin: 0 0 16px;
+      letter-spacing: -0.01em;
+    }
+
+    .about__title em { font-style: normal; color: var(--sakura-pink); }
+
+    .about__lede {
+      color: var(--moonlight);
+      font-size: 0.94rem;
+      line-height: 1.75;
+      margin: 0 0 32px;
+    }
+
+    .about__actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    @media (min-width: 640px) {
+      .about__actions { flex-direction: row; }
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s var(--ease-out);
+      border: 1px solid transparent;
+    }
+
+    .btn--primary {
+      background: linear-gradient(135deg, var(--sakura-pink), var(--wisteria));
+      color: #1a0f1e;
+      box-shadow: 0 0 32px rgba(255, 131, 197, 0.25);
+    }
+    .btn--primary:hover { transform: translateY(-2px); }
+
+    .btn--ghost {
+      background: rgba(18, 13, 28, 0.75);
+      border-color: var(--border);
+      color: var(--frost);
+    }
+    .btn--ghost:hover { border-color: var(--sakura-pink); color: var(--sakura-pink); }
+
+    /* ── FOOTER ───────────────────────────────────────────────── */
+    footer {
+      padding: 48px 24px;
+      border-top: 1px solid var(--border);
+      background: rgba(9, 7, 16, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .footer__inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    @media (min-width: 768px) {
+      .footer__inner { flex-direction: row; justify-content: space-between; }
+    }
+
+    .footer__brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--font-heading);
+      font-weight: 600;
+      color: var(--frost);
+    }
+
+    .footer__meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--moonlight);
+      letter-spacing: 0.04em;
+    }
+
+    .footer__links { display: flex; gap: 20px; font-size: 13px; flex-wrap: wrap; justify-content: center; }
+    .footer__links a {
+      color: var(--moonlight); text-decoration: none;
+      transition: color 0.2s var(--ease-out);
+    }
+    .footer__links a:hover { color: var(--sakura-pink); }
+
+    @media (max-width: 640px) {
+      .hero { padding: 180px 0 48px; }
+      .project__body { padding: 28px 24px; }
+      .bg-pause { bottom: 16px; right: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-layer"></div>
+  <video class="bg-video" id="bg-video" autoplay muted loop playsinline preload="auto">
+    <source src="bkg.mp4" type="video/mp4">
+  </video>
+  <div class="bg-vignette"></div>
+
+  <button class="bg-pause" id="bg-pause" aria-label="Pause background video">
+    <i class="fas fa-pause" id="bg-pause-icon"></i>
+  </button>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="index.html" class="nav__brand">
+      <div class="nav__logo">L</div>
+      <span class="nav__title">Luma Games</span>
+    </a>
+    <div class="nav__links">
+      <a href="cpp.html" class="nav__link">C++ Edition</a>
+      <a href="rust.html" class="nav__link">Rust Edition</a>
+      <a href="projects.html" class="nav__link nav__link--active">Projects</a>
+      <a href="changelog.html" class="nav__link">Changelog</a>
+      <a href="https://github.com/LumaGameEngine" target="_blank" rel="noopener" class="nav__link">GitHub</a>
+    </div>
+  </nav>
+
+  <main class="page">
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero__eyebrow">
+        <i class="fas fa-gamepad"></i> Luma Games · Projects
+      </div>
+      <h1 class="hero__title">
+        Worlds built on <em>Luma.</em>
+      </h1>
+      <p class="hero__lede">
+        Luma Games builds games on top of the engine. Every project here is in active development. Development stages are shown honestly — nothing is marketed as finished until it's finished.
+      </p>
+    </section>
+
+    <!-- PROJECTS -->
+    <section class="projects">
+
+      <!-- LUMARA -->
+      <article class="project">
+        <div class="project__media">
+          <div class="project__media-placeholder" role="img" aria-label="LUMARA: Screenshot coming soon">
+            <div class="project__media-icon"><i class="fas fa-seedling"></i></div>
+            <div class="project__media-name">LUMARA</div>
+            <div class="project__media-note">Screenshot coming soon</div>
+          </div>
+        </div>
+        <div class="project__body">
+          <span class="project__status project__status--dev">In development</span>
+          <h2 class="project__title">LUMARA:<br>The Last Sky Garden</h2>
+          <p class="project__tagline">Narrative exploration · Floating botanical world</p>
+          <p class="project__desc">
+            A narrative-driven exploration game set in a floating botanical world. Guide Lola through a dying sky garden as she discovers what remains of the civilization that built it. Built on Dimension L with the LOVE scripting language.
+          </p>
+          <div class="project__meta">
+            <span class="project__tag">2D</span>
+            <span class="project__tag">Exploration</span>
+            <span class="project__tag">Narrative</span>
+            <span class="project__tag">Software rendering</span>
+          </div>
+          <div class="project__engine">
+            <i class="fas fa-cog"></i>
+            Built on <a href="cpp.html">Luma Engine C++</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- OCTO SPACERS -->
+      <article class="project">
+        <div class="project__media">
+          <div class="project__media-placeholder" role="img" aria-label="Octo Spacers: Screenshot coming soon">
+            <div class="project__media-icon"><i class="fas fa-rocket"></i></div>
+            <div class="project__media-name">OCTO SPACERS</div>
+            <div class="project__media-note">Screenshot coming soon</div>
+          </div>
+        </div>
+        <div class="project__body">
+          <span class="project__status project__status--dev">In development</span>
+          <h2 class="project__title">Octo Spacers</h2>
+          <p class="project__tagline">Arcade shooter · Particle-heavy chaos</p>
+          <p class="project__desc">
+            A fast-paced arcade shooter that exists to stress-test the engine. Every enemy, every bullet, every explosion is drawn by the software rasterizer — no GPU, no cheating. Explores particle systems, sprite batching, and the limits of 60 FPS on modest hardware.
+          </p>
+          <div class="project__meta">
+            <span class="project__tag">2D</span>
+            <span class="project__tag">Arcade</span>
+            <span class="project__tag">Particles</span>
+            <span class="project__tag">Software rendering</span>
+          </div>
+          <div class="project__engine">
+            <i class="fas fa-cog"></i>
+            Built on <a href="cpp.html">Luma Engine C++</a>
+          </div>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- ABOUT -->
+    <section class="about">
+      <h2 class="about__title">More <em>coming.</em></h2>
+      <p class="about__lede">
+        Luma Games is a small studio. Every project on this page is made with the same engine we ship — nothing here is a tech demo dressed up as a game. If you want to follow development, the changelog is updated when the engine changes.
+      </p>
+      <div class="about__actions">
+        <a href="cpp.html" class="btn btn--primary">
+          <i class="fas fa-code"></i> Explore the C++ edition
+        </a>
+        <a href="rust.html" class="btn btn--ghost">
+          <i class="fas fa-code"></i> Explore the Rust edition
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="footer__inner">
+      <div class="footer__brand">
+        <div class="nav__logo">L</div>
+        <span>Luma Games</span>
+      </div>
+      <div class="footer__meta">
+        © 2026 Luma Games · Build beyond the frame
+      </div>
+      <div class="footer__links">
+        <a href="index.html">Home</a>
+        <a href="cpp.html">C++ Edition</a>
+        <a href="rust.html">Rust Edition</a>
+        <a href="changelog.html">Changelog</a>
+        <a href="https://github.com/LumaGameEngine" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      const video = document.getElementById('bg-video');
+      const btn = document.getElementById('bg-pause');
+      const icon = document.getElementById('bg-pause-icon');
+      if (video && btn && icon) {
+        video.addEventListener('error', () => { btn.style.display = 'none'; });
+        const checkSrc = video.querySelector('source');
+        if (checkSrc) checkSrc.addEventListener('error', () => { btn.style.display = 'none'; });
+        btn.addEventListener('click', () => {
+          if (video.paused) {
+            video.play().catch(() => {});
+            icon.classList.replace('fa-play', 'fa-pause');
+          } else {
+            video.pause();
+            icon.classList.replace('fa-pause', 'fa-play');
+          }
+        });
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          video.pause();
+          icon.classList.replace('fa-pause', 'fa-play');
+        }
+      }
+    })();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation — Luma Engine Rust</title>
+  <meta name="description" content="Rust edition documentation: the DL-ARA workspace, crate architecture, math conventions, software rasterization, BVH ray tracing, real-time path tracer, render graph, and launcher.">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --void:        #090710;
+      --deep-plum:   #120D1C;
+      --sakura-dark: #211226;
+      --sakura-pink: #FF83C5;
+      --bloom:       #FFA9D7;
+      --wisteria:    #B9A0FF;
+      --frost:       #F4F0FA;
+      --moonlight:   #B7AEC7;
+      --border:      #33233D;
+      --green:       #6EE7A8;
+
+      /* Rust Edition accents */
+      --edition-accent:    #D6A5FF;
+      --edition-highlight: #FF8ED2;
+      --edition-glow:      rgba(190, 105, 255, 0.20);
+
+      --font-heading: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+      --font-body:    'Inter', 'Plus Jakarta Sans', sans-serif;
+      --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    html, body { margin: 0; padding: 0; }
+
+    body {
+      background: var(--void);
+      color: var(--frost);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background-color: var(--void);
+      background-image: url('bkg.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .bg-video {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.4;
+      filter: saturate(0.85) brightness(0.8) hue-rotate(-10deg);
+    }
+
+    .bg-vignette {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 30% 40%, rgba(9, 7, 16, 0.4) 0%, rgba(9, 7, 16, 0.8) 60%, rgba(9, 7, 16, 0.94) 100%),
+        linear-gradient(90deg, rgba(9, 7, 16, 0.95) 0%, rgba(9, 7, 16, 0.75) 42%, rgba(9, 7, 16, 0.3) 100%);
+    }
+
+    .bg-pause {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 100;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(18, 13, 28, 0.75);
+      border: 1px solid var(--border);
+      color: var(--moonlight);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.2s var(--ease-out);
+    }
+    .bg-pause:hover {
+      color: var(--edition-accent);
+      border-color: var(--edition-accent);
+      transform: scale(1.05);
+    }
+
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--void); }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 5px;
+      border: 2px solid var(--void);
+    }
+
+    /* ── NAV ──────────────────────────────────────────────────── */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 50;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(9, 7, 16, 0.55);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(51, 35, 61, 0.4);
+    }
+
+    .nav__brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--frost); }
+    .nav__logo {
+      width: 32px; height: 32px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--edition-accent), var(--edition-highlight));
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-heading); font-weight: 700; font-size: 14px;
+      color: #1a0f1e; box-shadow: 0 0 20px var(--edition-glow);
+    }
+    .nav__title { font-family: var(--font-heading); font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+
+    .nav__links { display: none; gap: 24px; font-size: 14px; }
+    .nav__link {
+      color: var(--moonlight); text-decoration: none;
+      transition: color 0.2s var(--ease-out);
+    }
+    .nav__link:hover { color: var(--frost); }
+
+    @media (min-width: 900px) {
+      .nav__links { display: flex; }
+    }
+
+    /* ── SWITCHER ─────────────────────────────────────────────── */
+    .switcher {
+      position: fixed;
+      top: 61px; left: 0; right: 0;
+      z-index: 49;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: rgba(9, 7, 16, 0.65);
+      border-bottom: 1px solid rgba(51, 35, 61, 0.4);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .switcher__edition {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(18, 13, 28, 0.5);
+      color: var(--moonlight);
+      text-decoration: none;
+      font-family: var(--font-body);
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .switcher__edition:hover {
+      border-color: var(--border);
+      background: rgba(18, 13, 28, 0.8);
+      color: var(--frost);
+    }
+
+    .switcher__edition--active {
+      border-color: var(--edition-accent);
+      background: var(--edition-glow);
+    }
+
+    .switcher__mark { font-size: 11px; opacity: 0.7; }
+    .switcher__edition--active .switcher__mark { color: var(--edition-accent); opacity: 1; }
+
+    .switcher__label {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.25;
+    }
+    .switcher__label strong { font-size: 13px; font-weight: 600; color: var(--frost); }
+    .switcher__label small { font-size: 10px; color: var(--moonlight); letter-spacing: 0.02em; }
+
+    /* ── DOCS LAYOUT ──────────────────────────────────────────── */
+    .docs {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 140px 24px 96px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 48px;
+    }
+
+    @media (min-width: 1024px) {
+      .docs { grid-template-columns: 220px 1fr 200px; gap: 56px; }
+    }
+
+    /* ── SIDEBAR ──────────────────────────────────────────────── */
+    .sidebar {
+      position: sticky;
+      top: 120px;
+      align-self: start;
+      max-height: calc(100vh - 140px);
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+
+    .sidebar__label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--moonlight);
+      margin: 0 0 12px;
+      padding-left: 10px;
+    }
+
+    .sidebar__link {
+      display: block;
+      padding: 6px 10px;
+      font-size: 13.5px;
+      color: var(--moonlight);
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      transition: all 0.15s var(--ease-out);
+      border-radius: 0 6px 6px 0;
+    }
+
+    .sidebar__link:hover {
+      color: var(--frost);
+      background: rgba(214, 165, 255, 0.05);
+    }
+
+    .sidebar__link--active {
+      color: var(--edition-accent);
+      border-left-color: var(--edition-accent);
+      background: rgba(214, 165, 255, 0.08);
+    }
+
+    /* ── CONTENT ──────────────────────────────────────────────── */
+    .content {
+      min-width: 0;
+    }
+
+    .doc-header {
+      padding-bottom: 32px;
+      margin-bottom: 40px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .doc-header__eyebrow {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--edition-accent);
+      background: var(--edition-glow);
+      border: 1px solid rgba(190, 105, 255, 0.25);
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+    }
+
+    .doc-header h1 {
+      font-family: var(--font-heading);
+      font-size: clamp(2rem, 4vw, 2.75rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      font-weight: 700;
+      color: var(--frost);
+      margin: 0 0 12px;
+    }
+
+    .doc-header h1 em { font-style: normal; color: var(--edition-accent); }
+
+    .doc-header p {
+      color: var(--moonlight);
+      font-size: 1.0625rem;
+      margin: 0;
+      max-width: 65ch;
+    }
+
+    .content h2 {
+      font-family: var(--font-heading);
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--frost);
+      margin: 56px 0 16px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+      letter-spacing: -0.01em;
+      scroll-margin-top: 140px;
+    }
+
+    .content h2:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+
+    .content h3 {
+      font-family: var(--font-heading);
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--frost);
+      margin: 32px 0 12px;
+      scroll-margin-top: 140px;
+    }
+
+    .content p {
+      color: var(--moonlight);
+      margin: 0 0 16px;
+      line-height: 1.75;
+    }
+
+    .content p strong { color: var(--frost); font-weight: 600; }
+
+    .content a {
+      color: var(--edition-accent);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(190, 105, 255, 0.3);
+      transition: border-color 0.2s var(--ease-out);
+    }
+    .content a:hover { border-bottom-color: var(--edition-accent); }
+
+    .content ul, .content ol {
+      color: var(--moonlight);
+      padding-left: 24px;
+      margin: 0 0 16px;
+    }
+
+    .content li {
+      margin-bottom: 6px;
+      line-height: 1.7;
+    }
+
+    .content li strong { color: var(--frost); }
+
+    .content code {
+      font-family: var(--font-mono);
+      font-size: 0.86em;
+      color: var(--edition-highlight);
+      background: rgba(255, 142, 210, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* ── CODE BLOCK ───────────────────────────────────────────── */
+    .code {
+      background: rgba(9, 7, 16, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 16px 0 24px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .code__head {
+      padding: 8px 14px;
+      background: rgba(18, 13, 28, 0.6);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--moonlight);
+    }
+
+    .code__lang {
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--edition-glow);
+      color: var(--edition-accent);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .code__body {
+      padding: 16px 20px;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      line-height: 1.7;
+      color: var(--moonlight);
+      overflow-x: auto;
+    }
+
+    .code__body p { margin: 0; }
+
+    .kw  { color: var(--edition-accent); font-weight: 600; }
+    .fn  { color: var(--wisteria); }
+    .num { color: var(--bloom); }
+    .str { color: #FFBD2E; }
+    .cm  { color: rgba(183, 174, 199, 0.5); font-style: italic; }
+    .ty  { color: var(--sakura-pink); }
+    .mac { color: var(--edition-highlight); }
+
+    /* ── CALLOUTS ─────────────────────────────────────────────── */
+    .callout {
+      padding: 16px 20px;
+      background: rgba(190, 105, 255, 0.04);
+      border-left: 2px solid var(--edition-accent);
+      border-radius: 0 8px 8px 0;
+      margin: 20px 0;
+    }
+
+    .callout--info {
+      background: rgba(185, 160, 255, 0.04);
+      border-left-color: var(--wisteria);
+    }
+
+    .callout--green {
+      background: rgba(110, 231, 168, 0.04);
+      border-left-color: var(--green);
+    }
+
+    .callout--warn {
+      background: rgba(255, 169, 215, 0.04);
+      border-left-color: var(--bloom);
+    }
+
+    .callout__title {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--edition-accent);
+      margin: 0 0 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .callout--info .callout__title { color: var(--wisteria); }
+    .callout--green .callout__title { color: var(--green); }
+    .callout--warn .callout__title { color: var(--bloom); }
+
+    .callout p { margin: 0; font-size: 0.9rem; }
+
+    /* ── TABLE ────────────────────────────────────────────────── */
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0 24px;
+      font-size: 0.9rem;
+    }
+
+    .table th {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--edition-accent);
+    }
+
+    .table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(51, 35, 61, 0.4);
+      color: var(--moonlight);
+    }
+
+    /* ── CRATE BADGE ──────────────────────────────────────────── */
+    .badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-right: 4px;
+    }
+
+    .badge--stable { color: var(--green); background: rgba(110, 231, 168, 0.08); border: 1px solid rgba(110, 231, 168, 0.2); }
+    .badge--alpha  { color: var(--edition-accent); background: var(--edition-glow); border: 1px solid rgba(190, 105, 255, 0.25); }
+    .badge--research { color: var(--moonlight); background: rgba(183, 174, 199, 0.08); border: 1px solid rgba(183, 174, 199, 0.2); }
+
+    /* ── RIGHT TOC ────────────────────────────────────────────── */
+    .toc {
+      position: sticky;
+      top: 120px;
+      align-self: start;
+      max-height: calc(100vh - 140px);
+      overflow-y: auto;
+      font-size: 12.5px;
+      display: none;
+    }
+
+    @media (min-width: 1024px) {
+      .toc { display: block; }
+    }
+
+    .toc__label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--moonlight);
+      margin: 0 0 10px;
+    }
+
+    .toc a {
+      display: block;
+      padding: 4px 0;
+      color: var(--moonlight);
+      text-decoration: none;
+      transition: color 0.15s var(--ease-out);
+    }
+
+    .toc a:hover { color: var(--edition-accent); }
+
+    /* ── PAGE NAV ─────────────────────────────────────────────── */
+    .page-nav {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 64px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    .page-nav__item {
+      padding: 16px 20px;
+      background: rgba(18, 13, 28, 0.5);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      text-decoration: none;
+      transition: all 0.2s var(--ease-out);
+      flex: 1;
+    }
+
+    .page-nav__item:hover {
+      border-color: var(--edition-accent);
+    }
+
+    .page-nav__label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--moonlight);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .page-nav__title {
+      font-family: var(--font-heading);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--frost);
+    }
+
+    .page-nav__item--next { text-align: right; }
+
+    /* ── FOOTER ───────────────────────────────────────────────── */
+    footer {
+      padding: 48px 24px;
+      border-top: 1px solid var(--border);
+      background: rgba(9, 7, 16, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .footer__inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    @media (min-width: 768px) {
+      .footer__inner { flex-direction: row; justify-content: space-between; }
+    }
+
+    .footer__brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--font-heading);
+      font-weight: 600;
+      color: var(--frost);
+    }
+
+    .footer__meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--moonlight);
+      letter-spacing: 0.04em;
+    }
+
+    .footer__links { display: flex; gap: 20px; font-size: 13px; }
+    .footer__links a {
+      color: var(--moonlight); text-decoration: none;
+      transition: color 0.2s var(--ease-out);
+    }
+    .footer__links a:hover { color: var(--edition-accent); }
+
+    @media (max-width: 640px) {
+      .docs { padding: 130px 16px 64px; }
+      .sidebar { position: static; max-height: none; }
+      .bg-pause { bottom: 16px; right: 16px; }
+    }
+  </style>
+</head>
+<body data-engine-edition="rust">
+
+  <div class="bg-layer"></div>
+  <video class="bg-video" id="bg-video" autoplay muted loop playsinline preload="auto">
+    <source src="bkg.mp4" type="video/mp4">
+  </video>
+  <div class="bg-vignette"></div>
+
+  <button class="bg-pause" id="bg-pause" aria-label="Pause background video">
+    <i class="fas fa-pause" id="bg-pause-icon"></i>
+  </button>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="index.html" class="nav__brand">
+      <div class="nav__logo">L</div>
+      <span class="nav__title">Luma Engine</span>
+    </a>
+    <div class="nav__links">
+      <a href="rust.html" class="nav__link">Overview</a>
+      <a href="rust.html#crates" class="nav__link">Crates</a>
+      <a href="rust.html#architecture" class="nav__link">Architecture</a>
+      <a href="docs-rust.html" class="nav__link" style="color: var(--edition-accent)">Docs</a>
+      <a href="download_rust.html" class="nav__link">Download</a>
+      <a href="changelog.html" class="nav__link">Changelog</a>
+    </div>
+  </nav>
+
+  <!-- SWITCHER -->
+  <nav class="switcher" aria-label="Choose an engine edition">
+    <a href="cpp.html" class="switcher__edition">
+      <span class="switcher__mark">◇</span>
+      <span class="switcher__label">
+        <strong>Luma Engine C++</strong>
+        <small>Classic edition</small>
+      </span>
+    </a>
+    <a href="rust.html" class="switcher__edition switcher__edition--active" aria-current="page">
+      <span class="switcher__mark">◈</span>
+      <span class="switcher__label">
+        <strong>Luma Engine Rust</strong>
+        <small>Rust edition</small>
+      </span>
+    </a>
+  </nav>
+
+  <div class="docs">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar__label">Rust Documentation</div>
+      <a href="#introduction" class="sidebar__link sidebar__link--active">Introduction</a>
+      <a href="#getting-started" class="sidebar__link">Getting started</a>
+      <a href="#workspace" class="sidebar__link">Workspace</a>
+      <a href="#conventions" class="sidebar__link">Math conventions</a>
+      <a href="#dl-math" class="sidebar__link">dl-math</a>
+      <a href="#dl-rasterization" class="sidebar__link">dl-rasterization</a>
+      <a href="#dl-ray" class="sidebar__link">dl-ray</a>
+      <a href="#dl-ray-tracing" class="sidebar__link">dl-ray-tracing</a>
+      <a href="#dl-rendergraph" class="sidebar__link">dl-rendergraph</a>
+      <a href="#dl-render-camera" class="sidebar__link">dl-render-camera</a>
+      <a href="#dl-input" class="sidebar__link">dl-input</a>
+      <a href="#luma-launcher" class="sidebar__link">luma_launcher</a>
+      <a href="#limitations" class="sidebar__link">Limitations</a>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="content">
+
+      <header class="doc-header">
+        <div class="doc-header__eyebrow">Rust Edition · Documentation</div>
+        <h1>Building on <em>DL-ARA</em>.</h1>
+        <p>
+          DL-ARA is a modular Rust workspace for Luma Engine. Every crate has a single responsibility, its own tests, and a documented public API. This page describes what exists today, what each crate does, and what is still in progress.
+        </p>
+      </header>
+
+      <!-- Introduction -->
+      <h2 id="introduction">Introduction</h2>
+      <p>
+        DL-ARA is not a monolith. It is a set of focused crates that build on each other in a shallow dependency graph. The whole workspace is <code>#![forbid(unsafe_code)]</code>, and every crate except <code>luma_launcher</code> has <strong>zero external dependencies</strong>.
+      </p>
+      <p>
+        The design goal is <strong>correctness first, performance measured</strong>. Every algorithm is written against a scalar reference first, with tests proving that optimized paths produce bit-identical output. No SIMD until the scalar path is proven. No <code>unsafe</code> anywhere in the foundation crates.
+      </p>
+
+      <div class="callout callout--green">
+        <div class="callout__title"><i class="fas fa-check-circle"></i> Status</div>
+        <p>The crates documented on this page are real implementations with passing tests. Research-grade rendering techniques (bidirectional path tracing, photon mapping, ReSTIR, volumetrics) are <strong>not implemented</strong> and are documented honestly under <a href="#limitations">Limitations</a>.</p>
+      </div>
+
+      <!-- Getting started -->
+      <h2 id="getting-started">Getting started</h2>
+      <p>
+        Clone the workspace and build the whole thing:
+      </p>
+
+      <div class="code">
+        <div class="code__head">
+          <span>Terminal</span>
+          <span class="code__lang">Shell</span>
+        </div>
+        <div class="code__body">
+          <p><span class="fn">git</span> clone https://github.com/LumaGameEngine/DL-ARA.git</p>
+          <p><span class="fn">cd</span> DL-ARA</p>
+          <p>&nbsp;</p>
+          <p><span class="cm"># Check the whole workspace</span></p>
+          <p><span class="fn">cargo</span> check --workspace</p>
+          <p>&nbsp;</p>
+          <p><span class="cm"># Run tests</span></p>
+          <p><span class="fn">cargo</span> test --workspace</p>
+          <p>&nbsp;</p>
+          <p><span class="cm"># Build the launcher</span></p>
+          <p><span class="fn">cargo</span> build -p luma_launcher --release</p>
+        </div>
+      </div>
+
+      <p>
+        Requires Rust <code>1.78</code> or newer (2021 edition). No system dependencies beyond a C toolchain and the Linux windowing libraries that <code>eframe</code> and <code>ureq</code> require.
+      </p>
+
+      <!-- Workspace -->
+      <h2 id="workspace">Workspace</h2>
+      <p>
+        The dependency graph is deliberately shallow. Every crate depends only on crates below it.
+      </p>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Crate</th>
+            <th>Depends on</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>dl-math</code></td>
+            <td><em>none</em></td>
+            <td><span class="badge badge--stable">Stable</span></td>
+          </tr>
+          <tr>
+            <td><code>dl-input</code></td>
+            <td><em>none</em></td>
+            <td><span class="badge badge--stable">Stable</span></td>
+          </tr>
+          <tr>
+            <td><code>dl-rasterization</code></td>
+            <td><code>dl-math</code></td>
+            <td><span class="badge badge--stable">Stable</span></td>
+          </tr>
+          <tr>
+            <td><code>dl-ray</code></td>
+            <td><code>dl-math</code></td>
+            <td><span class="badge badge--stable">Stable</span></td>
+          </tr>
+          <tr>
+            <td><code>dl-render-camera</code></td>
+            <td><code>dl-math</code></td>
+            <td><span class="badge badge--stable">Stable</span></td>
+          </tr>
+          <tr>
+            <td><code>dl-render-pass</code></td>
+            <td><em>none</em></td>
+            <td><span class="badge badge--stable">Stable</span></td>
+          </tr>
+          <tr>
+            <td><code>dl-render-graph-compile</code></td>
+            <td><em>none</em></td>
+            <td><span class="badge badge--stable">Stable</span></td>
+          </tr>
+          <tr>
+            <td><code>dl-rendergraph</code></td>
+            <td><code>dl-math</code>, <code>dl-render-pass</code>, <code>dl-render-graph-compile</code></td>
+            <td><span class="badge badge--alpha">Alpha</span></td>
+          </tr>
+          <tr>
+            <td><code>dl-ray-tracing</code></td>
+            <td><code>dl-math</code>, <code>dl-ray</code></td>
+            <td><span class="badge badge--alpha">Alpha</span></td>
+          </tr>
+          <tr>
+            <td><code>luma_launcher</code></td>
+            <td><code>ureq</code>, <code>sha2</code>, <code>flate2</code>, <code>tar</code>, <code>zip</code>, <code>eframe</code></td>
+            <td><span class="badge badge--stable">Stable</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Conventions -->
+      <h2 id="conventions">Math conventions</h2>
+      <p>
+        Every crate above <code>dl-math</code> conforms to the conventions in <code>CONVENTIONS.md</code>. These conventions are normative — violations are bugs, not style issues.
+      </p>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Rule</th>
+            <th>Value</th>
+            <th>Why</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Handedness</td><td>Right-handed</td><td>Matches wgpu, Vulkan, GLSL</td></tr>
+          <tr><td>Matrix storage</td><td>Column-major, <code>[f32; 16]</code></td><td>Matches wgpu and GLSL</td></tr>
+          <tr><td>Vector convention</td><td>Column-vectors (<code>M * v</code>)</td><td>Standard math composition order</td></tr>
+          <tr><td>Camera forward</td><td>−Z</td><td>Matches wgpu clip space</td></tr>
+          <tr><td>Clip-space depth</td><td><code>[0, 1]</code></td><td>Required by wgpu</td></tr>
+          <tr><td>Angle units</td><td>Radians</td><td>No degree conversion inside the crate</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout callout--info">
+        <div class="callout__title"><i class="fas fa-info-circle"></i> Deviation from C++</div>
+        <p>The C++ edition uses <code>[-1, 1]</code> clip depth (OpenGL convention). The Rust edition uses <code>[0, 1]</code> because <code>wgpu</code> requires it. This is documented in <code>CONVENTIONS.md</code> §5. The two editions do not share projection matrices.</p>
+      </div>
+
+      <!-- dl-math -->
+      <h2 id="dl-math">dl-math</h2>
+      <p>
+        The scalar foundation. Vectors, matrices, quaternions, colors, fixed-point arithmetic, geometry, noise, and fast math approximations. <code>f32</code>-only, no SIMD, no unions, <code>#[repr(C)]</code> structs.
+      </p>
+
+      <h3>Key types</h3>
+      <ul>
+        <li><code>Vec2</code>, <code>Vec3</code>, <code>Vec4</code> — 8, 12, and 16 bytes respectively. Hand-written reverse-scalar-multiply impls. Bit-identical <code>Hash</code> implementations.</li>
+        <li><code>Mat4</code> — column-major flat <code>[f32; 16]</code>. <code>inverse()</code> and <code>look_at()</code> return <code>Option</code> instead of producing NaN.</li>
+        <li><code>Quat</code> — Hamilton multiplication, <code>slerp</code> with antipodal handling.</li>
+        <li><code>Color</code> — full HSV / luminance / tonemapping / blend / packing surface.</li>
+        <li><code>Fixed&lt;IntType, BITS&gt;</code> — fixed-point with a sealed trait. <code>sqrt</code> uses bit-by-bit <code>isqrt</code>.</li>
+        <li><code>Aabb</code>, <code>Ray</code>, <code>Plane</code>, <code>Frustum</code> — geometry primitives. <code>is_point_in_triangle</code> uses an inclusive boundary.</li>
+      </ul>
+
+      <div class="code">
+        <div class="code__head">
+          <span>example.rs</span>
+          <span class="code__lang">Rust</span>
+        </div>
+        <div class="code__body">
+          <p><span class="kw">use</span> dl_math::{Mat4, Vec3, Vec4};</p>
+          <p>&nbsp;</p>
+          <p><span class="cm">// Column-major, column-vectors</span></p>
+          <p><span class="kw">let</span> m = Mat4::translation(Vec3::<span class="fn">new</span>(<span class="num">1.0</span>, <span class="num">2.0</span>, <span class="num">3.0</span>))</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;* Mat4::<span class="fn">rotation_y</span>(<span class="num">0.5</span>);</p>
+          <p>&nbsp;</p>
+          <p><span class="kw">let</span> p = Vec4::<span class="fn">point</span>(Vec3::<span class="fn">new</span>(<span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>));</p>
+          <p><span class="kw">let</span> world = m * p;</p>
+          <p>&nbsp;</p>
+          <p><span class="cm">// Singular matrices return None, not NaN</span></p>
+          <p><span class="kw">let</span> inv = m.<span class="fn">inverse</span>().<span class="fn">unwrap</span>();</p>
+        </div>
+      </div>
+
+      <!-- dl-rasterization -->
+      <h2 id="dl-rasterization">dl-rasterization</h2>
+      <p>
+        A CPU software rasterizer with three interchangeable pipelines: <strong>serial</strong>, <strong>tiled</strong>, and <strong>parallel</strong>. All three produce bit-identical output — the tiled and parallel tests assert this against the serial reference.
+      </p>
+
+      <h3>Pipelines</h3>
+      <ul>
+        <li><strong>Serial</strong> — single-threaded bounding-box scan. The reference implementation.</li>
+        <li><strong>Tiled</strong> — 16×16 tiles, bin triangles into tile lists with a prefix-sum layout, then process each tile with cache locality.</li>
+        <li><strong>Parallel</strong> — the same tiled pipeline, dispatched across <code>N</code> threads with an atomic tile cursor. No locks, no per-pixel contention (each tile owns its pixels).</li>
+      </ul>
+
+      <h3>Coverage</h3>
+      <ul>
+        <li>Fixed-point subpixel coordinates (8 fractional bits, <code>1 pixel = 256 units</code>).</li>
+        <li>Watertight edge equations with incremental <code>step_x</code> / <code>step_y</code>.</li>
+        <li>Top-left fill rule with per-edge flags.</li>
+        <li>Perspective-correct interpolation with pre-divided barycentrics.</li>
+        <li>Depth buffer with <code>Less</code>, <code>LessEqual</code>, <code>Greater</code>, <code>GreaterEqual</code>, and <code>Always</code> (standard and reversed Z).</li>
+      </ul>
+
+      <div class="code">
+        <div class="code__head">
+          <span>render.rs</span>
+          <span class="code__lang">Rust</span>
+        </div>
+        <div class="code__body">
+          <p><span class="kw">use</span> dl_rasterization::{</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;DepthBuffer, RasterizerConfig, SerialRasterizer,</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;Triangle, Viewport,</p>
+          <p>};</p>
+          <p>&nbsp;</p>
+          <p><span class="kw">let</span> <span class="kw">mut</span> raster = SerialRasterizer::<span class="fn">new</span>(</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;RasterizerConfig::default(),</p>
+          <p>)?;</p>
+          <p>&nbsp;</p>
+          <p><span class="kw">let</span> <span class="kw">mut</span> depth = DepthBuffer::<span class="fn">new</span>(<span class="num">1280</span>, <span class="num">720</span>);</p>
+          <p>depth.<span class="fn">clear</span>();</p>
+          <p>&nbsp;</p>
+          <p>raster.<span class="fn">draw</span>(</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;&amp;triangles,</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;&amp;Viewport::<span class="fn">new</span>(<span class="num">0</span>, <span class="num">0</span>, <span class="num">1280</span>, <span class="num">720</span>),</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;&amp;<span class="kw">mut</span> <span class="fn">Some</span>(&amp;<span class="kw">mut</span> depth),</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;|frag| {</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// interpolate attributes, write pixels</span></p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">true</span></p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;},</p>
+          <p>)?;</p>
+        </div>
+      </div>
+
+      <!-- dl-ray -->
+      <h2 id="dl-ray">dl-ray</h2>
+      <p>
+        The geometric foundation for ray-based rendering. Watertight triangle intersection, analytic primitives, and a binned SAH BVH.
+      </p>
+
+      <h3>Intersection</h3>
+      <ul>
+        <li><strong>Watertight Möller–Trumbore</strong> (Woop, Benthin, Wald 2013) — no dropped rays along shared edges.</li>
+        <li><code>Ray</code> stores precomputed <code>inv_direction</code> for fast slab tests.</li>
+        <li><code>Hit</code> has a <code>front_face</code> flag and flips its normal automatically when the ray hits from inside.</li>
+        <li>Analytic primitives: <code>Plane</code>, <code>Sphere</code>, <code>Disk</code>, <code>Cylinder</code>, <code>Cone</code>.</li>
+      </ul>
+
+      <h3>BVH</h3>
+      <ul>
+        <li>Binned Surface Area Heuristic with 12 buckets per axis.</li>
+        <li>Iterative traversal with an explicit <code>[u32; 64]</code> stack — no recursion, so malicious geometry cannot overflow the stack.</li>
+        <li>Closest-hit descends into the nearer child first; any-hit returns on the first intersection.</li>
+        <li><code>refit()</code> for dynamic meshes — updates node AABBs without re-sorting the tree.</li>
+      </ul>
+
+      <div class="code">
+        <div class="code__head">
+          <span>trace.rs</span>
+          <span class="code__lang">Rust</span>
+        </div>
+        <div class="code__body">
+          <p><span class="kw">use</span> dl_ray::{Ray, Scene, Triangle};</p>
+          <p>&nbsp;</p>
+          <p><span class="kw">let</span> scene = Scene::<span class="fn">new</span>(vec![</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;Triangle::<span class="fn">new</span>(</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Vec3::<span class="fn">new</span>(<span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">-3.0</span>),</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Vec3::<span class="fn">new</span>(<span class="num">1.0</span>, <span class="num">0.0</span>, <span class="num">-3.0</span>),</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Vec3::<span class="fn">new</span>(<span class="num">0.0</span>, <span class="num">1.0</span>, <span class="num">-3.0</span>),</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;),</p>
+          <p>]);</p>
+          <p>&nbsp;</p>
+          <p><span class="kw">let</span> ray = Ray::<span class="fn">new</span>(Vec3::ZERO, Vec3::<span class="fn">new</span>(<span class="num">0.25</span>, <span class="num">0.25</span>, -<span class="num">1.0</span>));</p>
+          <p>&nbsp;</p>
+          <p><span class="kw">if</span> <span class="kw">let</span> <span class="fn">Some</span>(hit) = scene.<span class="fn">intersect</span>(&amp;ray, <span class="num">0.0</span>, <span class="fn">f32::INFINITY</span>) {</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;println!(<span class="str">"hit at t={} normal={:?}"</span>, hit.t, hit.normal);</p>
+          <p>}</p>
+        </div>
+      </div>
+
+      <!-- dl-ray-tracing -->
+      <h2 id="dl-ray-tracing">dl-ray-tracing</h2>
+      <p>
+        A real-time path tracer. One sample per pixel per frame, with temporal accumulation and an à-trous denoiser. Not an offline renderer — the temporal + denoise stack is what makes 1 spp usable.
+      </p>
+
+      <h3>What's implemented</h3>
+      <ul>
+        <li>Reference-correct <strong>PCG32</strong> with per-pixel-per-frame seeding for TAA.</li>
+        <li>Sampling: hemisphere-uniform, cosine-weighted, sphere-uniform, GGX reflection. Every distribution has a Monte Carlo PDF integration test.</li>
+        <li><strong>Bsdf</strong> trait with <code>Lambertian</code>, <code>Mirror</code>, <code>Dielectric</code> (verified to reflect ~4% at normal incidence into glass), and <code>Emissive</code>.</li>
+        <li><strong>Lights</strong>: point, directional, and area (uniform triangle sampling).</li>
+        <li>Path tracer with <strong>NEE</strong> (next-event estimation), <strong>Russian roulette</strong>, and <strong>power-heuristic MIS</strong> on both sides.</li>
+        <li><strong>Temporal accumulation</strong> (exponential moving average) and a real <strong>à-trous denoiser</strong> driven by depth and normal.</li>
+        <li><strong>ACES / Reinhard / Clamp</strong> tonemapping and sRGB encode.</li>
+        <li><code>render_realtime</code> pipeline: trace → temporal → denoise → tonemap → sRGB → u8.</li>
+      </ul>
+
+      <div class="callout callout--warn">
+        <div class="callout__title"><i class="fas fa-exclamation-triangle"></i> Not yet on target</div>
+        <p>The path tracer does <strong>not yet hit</strong> the target of 60 fps at 720p / 45 fps at 1080p / 30 fps at 1440p on current hardware. The architecture is correct (1 spp, temporal, denoise, tile-parallel); tuning work remains on light selection and BVH traversal.</p>
+      </div>
+
+      <div class="code">
+        <div class="code__head">
+          <span>realtime.rs</span>
+          <span class="code__lang">Rust</span>
+        </div>
+        <div class="code__body">
+          <p><span class="kw">use</span> dl_ray_tracing::{</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;Camera, Emissive, Lambertian, PathTracer,</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;RealtimeState, RenderSettings, TraceScene, render_realtime,</p>
+          <p>};</p>
+          <p>&nbsp;</p>
+          <p><span class="kw">let</span> <span class="kw">mut</span> scene = TraceScene::<span class="fn">new</span>();</p>
+          <p><span class="kw">let</span> floor = scene.<span class="fn">add_material</span>(</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;Box::<span class="fn">new</span>(Lambertian::<span class="fn">new</span>(Vec3::<span class="fn">splat</span>(<span class="num">0.8</span>))),</p>
+          <p>);</p>
+          <p><span class="cm">// ... add triangles, lights ...</span></p>
+          <p>scene.<span class="fn">build</span>();</p>
+          <p>&nbsp;</p>
+          <p><span class="kw">let</span> tracer = PathTracer::<span class="fn">new</span>(<span class="num">2</span>, <span class="num">6</span>);</p>
+          <p><span class="kw">let</span> <span class="kw">mut</span> state = RealtimeState::<span class="fn">new</span>(<span class="num">1280</span>, <span class="num">720</span>);</p>
+          <p>&nbsp;</p>
+          <p><span class="kw">let</span> (pixels, stats) = <span class="fn">render_realtime</span>(</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;&amp;scene,</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;&amp;camera,</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;&amp;tracer,</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;RenderSettings::default(),</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;&amp;<span class="kw">mut</span> state,</p>
+          <p>);</p>
+        </div>
+      </div>
+
+      <!-- dl-rendergraph -->
+      <h2 id="dl-rendergraph">dl-rendergraph</h2>
+      <p>
+        The CPU render graph. Target pooling, typed handles, and pass scheduling with dependency resolution.
+      </p>
+
+      <h3>Components</h3>
+      <ul>
+        <li><strong><code>dl-render-graph-compile</code></strong> — dependency resolution (RAW / WAR / WAW), cycle detection, stable topological sort. Pure graph logic, no rendering.</li>
+        <li><strong><code>dl-render-pass</code></strong> — the <code>RenderPass</code> trait, <code>PassDescriptor</code>, <code>PassContext</code>, and <code>ResourceAccess</code>.</li>
+        <li><strong><code>dl-rendergraph</code></strong> — the actual graph. Owns the target pool, executes the compiled pass list, and produces the final image.</li>
+      </ul>
+
+      <div class="callout callout--info">
+        <div class="callout__title"><i class="fas fa-info-circle"></i> Alpha status</div>
+        <p><code>dl-rendergraph</code> is <span class="badge badge--alpha">Alpha</span>. It powers the neon-grid demo, but the API is still evolving. The two foundation crates it depends on are stable.</p>
+      </div>
+
+      <!-- dl-render-camera -->
+      <h2 id="dl-render-camera">dl-render-camera</h2>
+      <p>
+        A camera and projection system designed for large world coordinates. Position and forward direction are stored in <code>f64</code> and only downcast to <code>f32</code> when producing matrices for the GPU.
+      </p>
+
+      <h3>Why <code>f64</code>?</h3>
+      <p>
+        A camera at <code>x = 1e6</code> in a <code>f32</code> world produces visible jitter in the view matrix, because <code>f32</code> has ~0.06 unit precision at that magnitude. Doing the subtraction <code>(center - eye)</code> in <code>f64</code> and then downcasting avoids the jitter entirely.
+      </p>
+
+      <ul>
+        <li><code>Camera</code> — <code>f64</code> position and forward, produces <code>f32</code> matrices.</li>
+        <li><code>Projection</code> — perspective and orthographic, both using <code>[0, 1]</code> clip depth.</li>
+        <li><code>Frustum</code> — six-plane extraction (Gribb-Hartmann, adapted for <code>[0, 1]</code>) for culling.</li>
+        <li><code>Viewport</code> — integer pixel rectangle, top-left origin.</li>
+      </ul>
+
+      <!-- dl-input -->
+      <h2 id="dl-input">dl-input</h2>
+      <p>
+        Unified input mapping across keyboard, mouse, and gamepad. Xbox, PlayStation, and Nintendo controllers are all translated to a single gamepad layout by <code>GamepadButton::from_platform(controller, physical_face)</code>.
+      </p>
+
+      <h3>Actions</h3>
+      <ul>
+        <li><code>InputBinding</code> with scale, invert, and deadzone.</li>
+        <li><code>InputAction</code> with binary, 1D, and 2D variants.</li>
+        <li>Radial deadzone for sticks with rescale; independent axis deadzone for triggers.</li>
+        <li><code>ActionMap</code> with WASD and arrow-key bindings built in.</li>
+        <li><code>Input::end_frame()</code> must be called at the end of every frame to clear the <code>pressed</code> / <code>released</code> flags.</li>
+      </ul>
+
+      <div class="code">
+        <div class="code__head">
+          <span>input.rs</span>
+          <span class="code__lang">Rust</span>
+        </div>
+        <div class="code__body">
+          <p><span class="kw">use</span> dl_input::{ActionMap, Input, events::InputEvent, keyboard::Key};</p>
+          <p>&nbsp;</p>
+          <p><span class="kw">let</span> <span class="kw">mut</span> input = Input::<span class="fn">new</span>();</p>
+          <p><span class="kw">let</span> <span class="kw">mut</span> actions = ActionMap::<span class="fn">new</span>();</p>
+          <p>&nbsp;</p>
+          <p>actions.<span class="fn">bind_key</span>(<span class="str">"Jump"</span>, Key::Space);</p>
+          <p>actions.<span class="fn">bind_wasd_movement</span>(<span class="str">"Move"</span>);</p>
+          <p>&nbsp;</p>
+          <p>input.<span class="fn">process_event</span>(InputEvent::<span class="fn">KeyDown</span>(Key::Space));</p>
+          <p>input.<span class="fn">update</span>(<span class="num">0.016</span>);</p>
+          <p>actions.<span class="fn">update</span>(&amp;input);</p>
+          <p>&nbsp;</p>
+          <p><span class="kw">if</span> actions.<span class="fn">is_action_pressed</span>(<span class="str">"Jump"</span>) {</p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm">// ...</span></p>
+          <p>}</p>
+          <p>&nbsp;</p>
+          <p>input.<span class="fn">end_frame</span>();</p>
+          <p>actions.<span class="fn">end_frame</span>();</p>
+        </div>
+      </div>
+
+      <!-- luma_launcher -->
+      <h2 id="luma-launcher">luma_launcher</h2>
+      <p>
+        A native launcher and auto-updater for the Rust edition. Queries GitHub Releases, downloads the platform-specific archive, verifies SHA256, extracts, and launches the engine as a child process.
+      </p>
+
+      <h3>Update flow</h3>
+      <ol>
+        <li>Query <code>api.github.com/repos/{owner}/{repo}/releases/latest</code>.</li>
+        <li>Find the <code>LATEST.json</code> asset and parse the manifest.</li>
+        <li>Compare the version against the installed one (semver).</li>
+        <li>Download the platform archive to a temporary file, hashing as it streams.</li>
+        <li>Verify SHA256 against the manifest.</li>
+        <li>Extract to a staging directory.</li>
+        <li>Rename the running engine to <code>engine-old</code>, move the new engine into place, then spawn it.</li>
+        <li>When the child exits, delete <code>engine-old</code>.</li>
+      </ol>
+
+      <div class="callout callout--warn">
+        <div class="callout__title"><i class="fas fa-exclamation-triangle"></i> Requires a release pipeline</div>
+        <p>For the auto-updater to work, the GitHub repository must publish releases with <code>LATEST.json</code> and the platform archives. The exact asset naming is documented in the launcher's <code>README.md</code>.</p>
+      </div>
+
+      <!-- Limitations -->
+      <h2 id="limitations">Limitations</h2>
+      <p>
+        Being honest about what is not done is as important as documenting what is. Known limitations of the Rust edition as of this writing:
+      </p>
+
+      <h3>Rendering</h3>
+      <ul>
+        <li><strong>Path tracer does not yet hit the target framerate.</strong> The architecture is correct; tuning remains.</li>
+        <li><strong>No bidirectional path tracing, photon mapping, ReSTIR, or volumetrics.</strong> These are research-grade integrators, each a multi-month effort. They will be added to the workspace only when their foundations and tests are real.</li>
+        <li><strong>No spectral rendering.</strong> The path tracer works in RGB, not wavelengths.</li>
+        <li><strong>No subsurface scattering or BSSDFs.</strong> Materials are Lambertian, mirror, dielectric, and emissive only.</li>
+        <li><strong>Temporal reprojection assumes a stationary camera</strong> for now. Moving-camera reprojection will be added when the engine has a moving camera.</li>
+      </ul>
+
+      <h3>System</h3>
+      <ul>
+        <li><strong>No GPU backend.</strong> All rendering is CPU-only by design.</li>
+        <li><strong>No networking.</strong> The launcher uses HTTP only to check for updates.</li>
+        <li><strong>No scene serialization yet.</strong> Projects are not saved to disk in the Rust edition.</li>
+        <li><strong>No editor.</strong> The Rust edition ships a launcher, not an editor. The engine can be driven programmatically or through custom binaries.</li>
+      </ul>
+
+      <h3>Platforms</h3>
+      <ul>
+        <li><strong>Linux is the primary target.</strong> The launcher builds on macOS and Windows, but the render and trace pipelines have been tested primarily on Linux x86_64.</li>
+        <li><strong>ARM (Apple Silicon, aarch64 Linux)</strong> should work but has not been extensively tested.</li>
+      </ul>
+
+      <div class="callout callout--warn">
+        <div class="callout__title"><i class="fas fa-exclamation-triangle"></i> Alpha software</div>
+        <p>The Rust edition is early. Do not build a commercial product on it without tracking the workspace's development closely. The foundation crates (<code>dl-math</code>, <code>dl-ray</code>, <code>dl-rasterization</code>) are stable; the higher layers are still in motion.</p>
+      </div>
+
+      <!-- Page nav -->
+      <nav class="page-nav">
+        <a href="rust.html" class="page-nav__item">
+          <span class="page-nav__label">← Previous</span>
+          <span class="page-nav__title">Rust edition overview</span>
+        </a>
+        <a href="download_rust.html" class="page-nav__item page-nav__item--next">
+          <span class="page-nav__label">Next →</span>
+          <span class="page-nav__title">Download &amp; pricing</span>
+        </a>
+      </nav>
+
+    </main>
+
+    <!-- RIGHT TOC -->
+    <aside class="toc">
+      <div class="toc__label">On this page</div>
+      <a href="#introduction">Introduction</a>
+      <a href="#getting-started">Getting started</a>
+      <a href="#workspace">Workspace</a>
+      <a href="#conventions">Math conventions</a>
+      <a href="#dl-math">dl-math</a>
+      <a href="#dl-rasterization">dl-rasterization</a>
+      <a href="#dl-ray">dl-ray</a>
+      <a href="#dl-ray-tracing">dl-ray-tracing</a>
+      <a href="#dl-rendergraph">dl-rendergraph</a>
+      <a href="#dl-render-camera">dl-render-camera</a>
+      <a href="#dl-input">dl-input</a>
+      <a href="#luma-launcher">luma_launcher</a>
+      <a href="#limitations">Limitations</a>
+    </aside>
+
+  </div>
+
+  <footer>
+    <div class="footer__inner">
+      <div class="footer__brand">
+        <div class="nav__logo">L</div>
+        <span>Luma Engine Rust</span>
+      </div>
+      <div class="footer__meta">
+        © 2026 Luma Games · Documentation · DL-ARA
+      </div>
+      <div class="footer__links">
+        <a href="index.html">Home</a>
+        <a href="changelog.html">Changelog</a>
+        <a href="https://github.com/LumaGameEngine" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      const video = document.getElementById('bg-video');
+      const btn = document.getElementById('bg-pause');
+      const icon = document.getElementById('bg-pause-icon');
+      if (video && btn && icon) {
+        video.addEventListener('error', () => { btn.style.display = 'none'; });
+        const checkSrc = video.querySelector('source');
+        if (checkSrc) checkSrc.addEventListener('error', () => { btn.style.display = 'none'; });
+        btn.addEventListener('click', () => {
+          if (video.paused) {
+            video.play().catch(() => {});
+            icon.classList.replace('fa-play', 'fa-pause');
+          } else {
+            video.pause();
+            icon.classList.replace('fa-pause', 'fa-play');
+          }
+        });
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          video.pause();
+          icon.classList.replace('fa-pause', 'fa-play');
+        }
+      }
+
+      const sections = document.querySelectorAll('h2[id]');
+      const links = document.querySelectorAll('.sidebar__link');
+      if (sections.length > 0 && links.length > 0 && 'IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const id = entry.target.getAttribute('id');
+              links.forEach(l => {
+                l.classList.toggle('sidebar__link--active', l.getAttribute('href') === '#' + id);
+              });
+            }
+          });
+        }, { rootMargin: '-120px 0px -70% 0px' });
+        sections.forEach(s => observer.observe(s));
+      }
+    })();
+  </script>
+
+</body>
+</html>

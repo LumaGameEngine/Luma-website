@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Download & Pricing — Luma Engine Rust</title>
+  <meta name="description" content="Download Luma Engine Rust, the experimental Rust edition built on DL-ARA. Free demo, monthly subscription (€15/mo), or one-time lifetime purchase (€100).">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --void:        #090710;
+      --deep-plum:   #120D1C;
+      --sakura-dark: #211226;
+      --sakura-pink: #FF83C5;
+      --bloom:       #FFA9D7;
+      --wisteria:    #B9A0FF;
+      --frost:       #F4F0FA;
+      --moonlight:   #B7AEC7;
+      --border:      #33233D;
+      --green:       #6EE7A8;
+
+      --edition-accent:    #D6A5FF;
+      --edition-highlight: #FF8ED2;
+      --edition-glow:      rgba(190, 105, 255, 0.20);
+
+      --font-heading: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+      --font-body:    'Inter', 'Plus Jakarta Sans', sans-serif;
+      --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    html, body { margin: 0; padding: 0; }
+
+    body {
+      background: var(--void);
+      color: var(--frost);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background-color: var(--void);
+      background-image: url('bkg.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .bg-video {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.4;
+      filter: saturate(0.85) brightness(0.8) hue-rotate(-10deg);
+    }
+
+    .bg-vignette {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 30% 40%, rgba(9, 7, 16, 0.4) 0%, rgba(9, 7, 16, 0.8) 60%, rgba(9, 7, 16, 0.94) 100%),
+        linear-gradient(90deg, rgba(9, 7, 16, 0.95) 0%, rgba(9, 7, 16, 0.75) 42%, rgba(9, 7, 16, 0.3) 100%);
+    }
+
+    .bg-pause {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 100;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(18, 13, 28, 0.75);
+      border: 1px solid var(--border);
+      color: var(--moonlight);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.2s var(--ease-out);
+    }
+    .bg-pause:hover {
+      color: var(--edition-accent);
+      border-color: var(--edition-accent);
+      transform: scale(1.05);
+    }
+
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--void); }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 5px;
+      border: 2px solid var(--void);
+    }
+
+    /* ── NAV ──────────────────────────────────────────────────── */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 50;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(9, 7, 16, 0.55);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(51, 35, 61, 0.4);
+    }
+
+    .nav__brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--frost); }
+    .nav__logo {
+      width: 32px; height: 32px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--edition-accent), var(--edition-highlight));
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-heading); font-weight: 700; font-size: 14px;
+      color: #1a0f1e; box-shadow: 0 0 20px var(--edition-glow);
+    }
+    .nav__title { font-family: var(--font-heading); font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+
+    .nav__links { display: none; gap: 24px; font-size: 14px; }
+    .nav__link {
+      color: var(--moonlight); text-decoration: none;
+      transition: color 0.2s var(--ease-out);
+    }
+    .nav__link:hover { color: var(--frost); }
+
+    @media (min-width: 900px) {
+      .nav__links { display: flex; }
+    }
+
+    /* ── SWITCHER ─────────────────────────────────────────────── */
+    .switcher {
+      position: fixed;
+      top: 61px; left: 0; right: 0;
+      z-index: 49;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: rgba(9, 7, 16, 0.65);
+      border-bottom: 1px solid rgba(51, 35, 61, 0.4);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .switcher__edition {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(18, 13, 28, 0.5);
+      color: var(--moonlight);
+      text-decoration: none;
+      font-family: var(--font-body);
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .switcher__edition:hover {
+      border-color: var(--border);
+      background: rgba(18, 13, 28, 0.8);
+      color: var(--frost);
+    }
+
+    .switcher__edition--active {
+      border-color: var(--edition-accent);
+      background: var(--edition-glow);
+    }
+
+    .switcher__mark { font-size: 11px; opacity: 0.7; }
+    .switcher__edition--active .switcher__mark { color: var(--edition-accent); opacity: 1; }
+
+    .switcher__label {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.25;
+    }
+    .switcher__label strong { font-size: 13px; font-weight: 600; color: var(--frost); }
+    .switcher__label small { font-size: 10px; color: var(--moonlight); letter-spacing: 0.02em; }
+
+    /* ── PAGE ─────────────────────────────────────────────────── */
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .hero {
+      padding: 200px 0 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      min-height: 40vh;
+      justify-content: center;
+    }
+
+    .hero__eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--edition-accent);
+      background: var(--edition-glow);
+      border: 1px solid rgba(190, 105, 255, 0.25);
+      padding: 6px 14px;
+      border-radius: 999px;
+      margin-bottom: 24px;
+    }
+
+    .hero__title {
+      font-family: var(--font-heading);
+      font-size: clamp(2.25rem, 5vw, 3.75rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+      color: var(--frost);
+      margin: 0 0 20px;
+      max-width: 720px;
+    }
+
+    .hero__title em { font-style: normal; color: var(--edition-accent); }
+
+    .hero__lede {
+      font-size: 1.0625rem;
+      color: var(--moonlight);
+      max-width: 620px;
+      margin: 0 0 24px;
+      line-height: 1.65;
+    }
+
+    .hero__badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge--paid {
+      color: var(--edition-accent);
+      background: var(--edition-glow);
+      border: 1px solid rgba(190, 105, 255, 0.25);
+    }
+
+    .badge--demo {
+      color: var(--green);
+      background: rgba(110, 231, 168, 0.08);
+      border: 1px solid rgba(110, 231, 168, 0.2);
+    }
+
+    /* ── PLATFORMS ────────────────────────────────────────────── */
+    .platforms {
+      padding: 64px 0 96px;
+    }
+
+    .platform-grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 768px) {
+      .platform-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .platform {
+      position: relative;
+      padding: 36px 28px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: rgba(18, 13, 28, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s var(--ease-out);
+      overflow: hidden;
+    }
+
+    .platform::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--edition-accent);
+    }
+
+    .platform:hover {
+      transform: translateY(-3px);
+      border-color: var(--edition-accent);
+      box-shadow: 0 8px 40px var(--edition-glow);
+    }
+
+    .platform__icon {
+      width: 56px; height: 56px; border-radius: 14px;
+      background: var(--edition-glow);
+      border: 1px solid rgba(190, 105, 255, 0.25);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--edition-accent); font-size: 26px;
+      margin-bottom: 20px;
+    }
+
+    .platform__name {
+      font-family: var(--font-heading);
+      font-size: 1.5rem; font-weight: 700;
+      color: var(--frost); margin: 0 0 4px;
+      letter-spacing: -0.01em;
+    }
+
+    .platform__status {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+
+    .platform__status--ready {
+      color: var(--green);
+      background: rgba(110, 231, 168, 0.08);
+      border: 1px solid rgba(110, 231, 168, 0.2);
+    }
+
+    .platform__status--in-progress {
+      color: var(--wisteria);
+      background: rgba(185, 160, 255, 0.08);
+      border: 1px solid rgba(185, 160, 255, 0.2);
+    }
+
+    .platform__requirements {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--moonlight);
+      margin: 0 0 24px;
+      line-height: 1.7;
+    }
+
+    .platform__requirements span { display: block; }
+
+    .platform__cta {
+      margin-top: auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 24px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--edition-accent), var(--edition-highlight));
+      color: #1a0f1e;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+      box-shadow: 0 0 32px var(--edition-glow);
+    }
+
+    .platform__cta:hover { transform: translateY(-2px); }
+
+    .platform__cta--disabled {
+      background: rgba(18, 13, 28, 0.6);
+      color: var(--moonlight);
+      border: 1px solid var(--border);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .platform__cta--disabled:hover { transform: none; }
+
+    .platform__note {
+      margin-top: 12px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: rgba(183, 174, 199, 0.6);
+      text-align: center;
+    }
+
+    /* ── PRICING PREVIEW ──────────────────────────────────────── */
+    .pricing-preview {
+      padding: 96px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .section-header {
+      margin-bottom: 48px;
+      text-align: center;
+      max-width: 640px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .section-eyebrow {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--edition-accent);
+      background: var(--edition-glow);
+      border: 1px solid rgba(190, 105, 255, 0.25);
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-family: var(--font-heading);
+      font-size: clamp(1.875rem, 4vw, 2.75rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      font-weight: 700;
+      color: var(--frost);
+      margin: 0 0 16px;
+    }
+
+    .section-title em { font-style: normal; color: var(--edition-accent); }
+
+    .section-lede {
+      color: var(--moonlight);
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    .pricing-grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 1fr;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    @media (min-width: 768px) {
+      .pricing-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .tier {
+      position: relative;
+      padding: 32px 24px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(18, 13, 28, 0.55);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .tier:hover {
+      border-color: rgba(190, 105, 255, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .tier--featured {
+      border-color: var(--edition-accent);
+      background: rgba(190, 105, 255, 0.05);
+      box-shadow: 0 0 40px var(--edition-glow);
+    }
+
+    .tier__badge {
+      position: absolute;
+      top: -10px;
+      right: 20px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: var(--edition-accent);
+      color: #1a0f1e;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    .tier__name {
+      font-family: var(--font-heading);
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--frost);
+      margin: 0 0 12px;
+    }
+
+    .tier__price {
+      font-family: var(--font-heading);
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: var(--frost);
+      margin: 0 0 4px;
+      letter-spacing: -0.02em;
+    }
+
+    .tier__price small {
+      font-size: 0.9rem;
+      color: var(--moonlight);
+      font-weight: 400;
+      letter-spacing: 0;
+    }
+
+    .tier__period {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--moonlight);
+      margin: 0 0 24px;
+    }
+
+    .tier__features {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 24px;
+      flex-grow: 1;
+    }
+
+    .tier__features li {
+      position: relative;
+      padding: 6px 0 6px 22px;
+      font-size: 0.875rem;
+      color: var(--moonlight);
+      line-height: 1.5;
+    }
+
+    .tier__features li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--edition-accent);
+      font-weight: 700;
+    }
+
+    .tier__features li.off { color: rgba(183, 174, 199, 0.5); }
+    .tier__features li.off::before { content: '—'; color: rgba(183, 174, 199, 0.4); }
+
+    .tier__cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      background: rgba(18, 13, 28, 0.5);
+      color: var(--frost);
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .tier__cta:hover {
+      border-color: var(--edition-accent);
+      color: var(--edition-accent);
+    }
+
+    .tier--featured .tier__cta {
+      background: linear-gradient(135deg, var(--edition-accent), var(--edition-highlight));
+      color: #1a0f1e;
+      border-color: transparent;
+      box-shadow: 0 0 24px var(--edition-glow);
+    }
+
+    .tier--featured .tier__cta:hover { transform: translateY(-1px); }
+
+    /* ── FAQ ──────────────────────────────────────────────────── */
+    .faq {
+      padding: 96px 0;
+      border-top: 1px solid var(--border);
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .faq__item {
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+    }
+
+    .faq__item summary {
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--frost);
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .faq__item summary::-webkit-details-marker { display: none; }
+    .faq__item summary::after {
+      content: '+';
+      font-family: var(--font-mono);
+      color: var(--edition-accent);
+      font-size: 18px;
+      transition: transform 0.2s var(--ease-out);
+    }
+    .faq__item[open] summary::after { content: '−'; }
+
+    .faq__body {
+      color: var(--moonlight);
+      font-size: 0.9rem;
+      line-height: 1.7;
+      padding-top: 12px;
+    }
+
+    /* ── MODAL ────────────────────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(9, 7, 16, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 24px;
+      overflow-y: auto;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay--open { display: flex; }
+
+    .modal {
+      position: relative;
+      width: 100%;
+      max-width: 960px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--deep-plum);
+      padding: 40px 32px;
+      box-shadow: 0 24px 96px rgba(0, 0, 0, 0.6);
+      animation: modal-in 0.2s var(--ease-out);
+    }
+
+    @keyframes modal-in {
+      from { opacity: 0; transform: scale(0.96) translateY(10px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal__close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(18, 13, 28, 0.8);
+      border: 1px solid var(--border);
+      color: var(--moonlight);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .modal__close:hover {
+      color: var(--edition-accent);
+      border-color: var(--edition-accent);
+    }
+
+    .modal__header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .modal__eyebrow {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--edition-accent);
+      background: var(--edition-glow);
+      border: 1px solid rgba(190, 105, 255, 0.25);
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+    }
+
+    .modal__title {
+      font-family: var(--font-heading);
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--frost);
+      margin: 0 0 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .modal__subtitle {
+      color: var(--moonlight);
+      font-size: 0.94rem;
+      margin: 0;
+    }
+
+    .modal__subtitle strong { color: var(--edition-accent); font-weight: 600; }
+
+    .modal__grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 768px) {
+      .modal__grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .modal .tier { padding: 28px 20px; }
+
+    /* ── TOAST ────────────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      z-index: 300;
+      padding: 14px 22px;
+      border-radius: 12px;
+      background: var(--deep-plum);
+      border: 1px solid var(--edition-accent);
+      color: var(--frost);
+      font-family: var(--font-body);
+      font-size: 13px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s var(--ease-out);
+      max-width: 90vw;
+      text-align: center;
+    }
+
+    .toast--visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast__strong { color: var(--edition-accent); font-weight: 600; }
+
+    @media (max-width: 640px) {
+      .hero { padding: 180px 0 48px; }
+      .modal { padding: 32px 20px; }
+      .modal__title { font-size: 1.5rem; }
+      .bg-pause { bottom: 16px; right: 16px; }
+    }
+
+    /* ── FOOTER ───────────────────────────────────────────────── */
+    footer {
+      padding: 48px 24px;
+      border-top: 1px solid var(--border);
+      background: rgba(9, 7, 16, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .footer__inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    @media (min-width: 768px) {
+      .footer__inner { flex-direction: row; justify-content: space-between; }
+    }
+
+    .footer__brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--font-heading);
+      font-weight: 600;
+      color: var(--frost);
+    }
+
+    .footer__meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--moonlight);
+      letter-spacing: 0.04em;
+    }
+
+    .footer__links { display: flex; gap: 20px; font-size: 13px; }
+    .footer__links a {
+      color: var(--moonlight); text-decoration: none;
+      transition: color 0.2s var(--ease-out);
+    }
+    .footer__links a:hover { color: var(--edition-accent); }
+  </style>
+</head>
+<body data-engine-edition="rust">
+
+  <div class="bg-layer"></div>
+  <video class="bg-video" id="bg-video" autoplay muted loop playsinline preload="auto">
+    <source src="bkg.mp4" type="video/mp4">
+  </video>
+  <div class="bg-vignette"></div>
+
+  <button class="bg-pause" id="bg-pause" aria-label="Pause background video">
+    <i class="fas fa-pause" id="bg-pause-icon"></i>
+  </button>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="index.html" class="nav__brand">
+      <div class="nav__logo">L</div>
+      <span class="nav__title">Luma Engine</span>
+    </a>
+    <div class="nav__links">
+      <a href="rust.html" class="nav__link">Overview</a>
+      <a href="rust.html#crates" class="nav__link">Crates</a>
+      <a href="rust.html#architecture" class="nav__link">Architecture</a>
+      <a href="docs-rust.html" class="nav__link">Docs</a>
+      <a href="download_rust.html" class="nav__link" style="color: var(--edition-accent)" aria-current="page">Download</a>
+      <a href="changelog.html" class="nav__link">Changelog</a>
+    </div>
+  </nav>
+
+  <!-- SWITCHER -->
+  <nav class="switcher" aria-label="Choose an engine edition">
+    <a href="cpp.html" class="switcher__edition">
+      <span class="switcher__mark">◇</span>
+      <span class="switcher__label">
+        <strong>Luma Engine C++</strong>
+        <small>Classic edition</small>
+      </span>
+    </a>
+    <a href="rust.html" class="switcher__edition switcher__edition--active" aria-current="page">
+      <span class="switcher__mark">◈</span>
+      <span class="switcher__label">
+        <strong>Luma Engine Rust</strong>
+        <small>Rust edition</small>
+      </span>
+    </a>
+  </nav>
+
+  <main class="page">
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero__eyebrow">
+        <i class="fas fa-download"></i> Rust Edition · Download
+      </div>
+      <h1 class="hero__title">
+        Get <em>Luma Engine Rust</em>.
+      </h1>
+      <p class="hero__lede">
+        The Rust edition is in active development. Downloads and checkout aren't live yet; availability and pricing details will be updated here when releases are ready.
+      </p>
+      <div class="hero__badges">
+        <span class="badge badge--demo"><i class="fas fa-clock"></i> Coming soon</span>
+        <span class="badge badge--paid"><i class="fas fa-code"></i> In development</span>
+      </div>
+    </section>
+
+    <!-- PLATFORMS -->
+    <section class="platforms">
+      <div class="platform-grid">
+
+        <!-- Linux -->
+        <div class="platform">
+          <div class="platform__icon">
+            <i class="fab fa-linux"></i>
+          </div>
+          <h2 class="platform__name">Linux</h2>
+          <span class="platform__status platform__status--in-progress">In progress</span>
+          <p class="platform__requirements">
+            <span>Linux build in development</span>
+            <span>No release available yet</span>
+          </p>
+          <button class="platform__cta" data-platform="Linux">
+            <i class="fas fa-info-circle"></i> View pricing preview
+          </button>
+          <p class="platform__note">Release and checkout are not available yet</p>
+        </div>
+
+        <!-- Windows -->
+        <div class="platform">
+          <div class="platform__icon">
+            <i class="fab fa-windows"></i>
+          </div>
+          <h2 class="platform__name">Windows</h2>
+          <span class="platform__status platform__status--in-progress">In progress</span>
+          <p class="platform__requirements">
+            <span>Windows 10 / 11</span>
+            <span>x86_64 · launcher-based install</span>
+            <span>Build not yet shipped</span>
+            <span>Coming soon</span>
+          </p>
+          <a href="rust.html#crates" class="platform__cta platform__cta--disabled">
+            <i class="fas fa-clock"></i> Coming soon
+          </a>
+          <p class="platform__note">Follow the launcher for release news</p>
+        </div>
+
+        <!-- macOS -->
+        <div class="platform">
+          <div class="platform__icon">
+            <i class="fab fa-apple"></i>
+          </div>
+          <h2 class="platform__name">macOS</h2>
+          <span class="platform__status platform__status--in-progress">In progress</span>
+          <p class="platform__requirements">
+            <span>macOS 12.0+</span>
+            <span>Apple Silicon · universal</span>
+            <span>Build not yet shipped</span>
+            <span>Coming soon</span>
+          </p>
+          <a href="rust.html#crates" class="platform__cta platform__cta--disabled">
+            <i class="fas fa-clock"></i> Coming soon
+          </a>
+          <p class="platform__note">Follow the launcher for release news</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PRICING PREVIEW -->
+    <section class="pricing-preview">
+      <div class="section-header">
+        <span class="section-eyebrow">Pricing</span>
+        <h2 class="section-title">Choose the <em>plan that fits.</em></h2>
+        <p class="section-lede">
+          These are pricing previews only. Checkout and downloads are not available yet.
+        </p>
+      </div>
+
+      <div class="pricing-grid">
+
+        <!-- Demo -->
+        <div class="tier">
+          <h3 class="tier__name">Demo</h3>
+          <p class="tier__price">Free</p>
+          <p class="tier__period">30-day trial</p>
+          <ul class="tier__features">
+            <li>Full engine, all features</li>
+            <li>30 days from install</li>
+            <li>No payment required</li>
+            <li class="off">No updates after 30 days</li>
+            <li class="off">Watermark on exports</li>
+          </ul>
+          <button class="tier__cta" data-platform="Linux" data-tier="demo">Check demo availability</button>
+        </div>
+
+        <!-- Monthly -->
+        <div class="tier tier--featured">
+          <span class="tier__badge">Recommended</span>
+          <h3 class="tier__name">Monthly</h3>
+          <p class="tier__price">€15<small>/month</small></p>
+          <p class="tier__period">Cancel anytime</p>
+          <ul class="tier__features">
+            <li>Full engine, all features</li>
+            <li>All updates included</li>
+            <li>No watermark</li>
+            <li>Commercial use permitted</li>
+            <li class="off">Not a lifetime license</li>
+          </ul>
+          <button class="tier__cta" data-platform="Linux" data-tier="monthly">Checkout unavailable</button>
+        </div>
+
+        <!-- One-time -->
+        <div class="tier">
+          <h3 class="tier__name">One-time</h3>
+          <p class="tier__price">€100</p>
+          <p class="tier__period">Lifetime access</p>
+          <ul class="tier__features">
+            <li>Full engine, all features</li>
+            <li>All updates for 2 years</li>
+            <li>No watermark</li>
+            <li>Commercial use permitted</li>
+            <li>Permanent license</li>
+          </ul>
+          <button class="tier__cta" data-platform="Linux" data-tier="onetime">Checkout unavailable</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq">
+      <details class="faq__item">
+        <summary>Why isn't the Rust edition open source?</summary>
+        <div class="faq__body">
+          The Rust edition is a commercial product. The C++ edition is free and open source — if you want the source code, use that one. The Rust edition focuses on advanced rendering techniques that are still under active development, and the revenue funds that work.
+        </div>
+      </details>
+      <details class="faq__item">
+        <summary>What does the demo include?</summary>
+        <div class="faq__body">
+          The planned demo is the full engine, running for 30 days from first launch. Every feature is enabled. The only differences are: it expires after 30 days, and any project exports carry a small Luma watermark. No credit card required. The demo isn't available to download yet.
+        </div>
+      </details>
+      <details class="faq__item">
+        <summary>Can I switch plans later?</summary>
+        <div class="faq__body">
+          Yes. You can upgrade from Monthly to One-time at any time, and the remaining balance of your current monthly period is credited against the purchase. Downgrading from One-time to Monthly is not possible.
+        </div>
+      </details>
+      <details class="faq__item">
+        <summary>How are updates delivered?</summary>
+        <div class="faq__body">
+          The Rust edition uses its native launcher. It checks for updates when it starts, downloads the new version in the background, and swaps the running engine on your next launch. You never have to manually reinstall.
+        </div>
+      </details>
+      <details class="faq__item">
+        <summary>What happens if Windows or macOS builds aren't ready yet?</summary>
+        <div class="faq__body">
+          If you purchase a plan, it applies to all platforms. You can start using it on Linux today and switch to Windows or macOS as soon as those builds ship. Your license is per-user, not per-platform.
+        </div>
+      </details>
+      <details class="faq__item">
+        <summary>Is checkout available now?</summary>
+        <div class="faq__body">
+          Not yet. Luma Engine is still under active development, and payments will be enabled when the engine reaches a stable enough state to justify selling access. The demo and paid plans aren't available yet. When they are ready, this page will be updated.
+        </div>
+      </details>
+    </section>
+
+  </main>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal" id="modal">
+      <button class="modal__close" id="modal-close" aria-label="Close dialog">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div class="modal__header">
+        <div class="modal__eyebrow">Choose your plan</div>
+        <h2 class="modal__title" id="modal-title">Get Luma Engine Rust</h2>
+        <p class="modal__subtitle">
+          Platform: <strong id="modal-platform">Linux</strong>
+        </p>
+      </div>
+
+      <div class="modal__grid">
+
+        <div class="tier">
+          <h3 class="tier__name">Demo</h3>
+          <p class="tier__price">Free</p>
+          <p class="tier__period">30-day trial</p>
+          <ul class="tier__features">
+            <li>Full engine, all features</li>
+            <li>30 days from install</li>
+            <li>No payment required</li>
+            <li class="off">No updates after 30 days</li>
+            <li class="off">Watermark on exports</li>
+          </ul>
+          <button class="tier__cta" data-platform="Linux" data-tier="demo">Check demo availability</button>
+        </div>
+
+        <div class="tier tier--featured">
+          <span class="tier__badge">Recommended</span>
+          <h3 class="tier__name">Monthly</h3>
+          <p class="tier__price">€15<small>/month</small></p>
+          <p class="tier__period">Cancel anytime</p>
+          <ul class="tier__features">
+            <li>Full engine, all features</li>
+            <li>All updates included</li>
+            <li>No watermark</li>
+            <li>Commercial use permitted</li>
+            <li class="off">Not a lifetime license</li>
+          </ul>
+          <button class="tier__cta" data-platform="Linux" data-tier="monthly">Checkout unavailable</button>
+        </div>
+
+        <div class="tier">
+          <h3 class="tier__name">One-time</h3>
+          <p class="tier__price">€100</p>
+          <p class="tier__period">Lifetime access</p>
+          <ul class="tier__features">
+            <li>Full engine, all features</li>
+            <li>All updates for 2 years</li>
+            <li>No watermark</li>
+            <li>Commercial use permitted</li>
+            <li>Permanent license</li>
+          </ul>
+          <button class="tier__cta" data-platform="Linux" data-tier="onetime">Checkout unavailable</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <footer>
+    <div class="footer__inner">
+      <div class="footer__brand">
+        <div class="nav__logo">L</div>
+        <span>Luma Engine Rust</span>
+      </div>
+      <div class="footer__meta">
+        © 2026 Luma Games · Rust edition · Proprietary
+      </div>
+      <div class="footer__links">
+        <a href="index.html">Home</a>
+        <a href="changelog.html">Changelog</a>
+        <a href="https://github.com/LumaGameEngine" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      // Background video
+      const video = document.getElementById('bg-video');
+      const bgBtn = document.getElementById('bg-pause');
+      const bgIcon = document.getElementById('bg-pause-icon');
+      if (video && bgBtn && bgIcon) {
+        video.addEventListener('error', () => { bgBtn.style.display = 'none'; });
+        const checkSrc = video.querySelector('source');
+        if (checkSrc) checkSrc.addEventListener('error', () => { bgBtn.style.display = 'none'; });
+        bgBtn.addEventListener('click', () => {
+          if (video.paused) {
+            video.play().catch(() => {});
+            bgIcon.classList.replace('fa-play', 'fa-pause');
+          } else {
+            video.pause();
+            bgIcon.classList.replace('fa-pause', 'fa-play');
+          }
+        });
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          video.pause();
+          bgIcon.classList.replace('fa-pause', 'fa-play');
+        }
+      }
+
+      // ── Toast ────────────────────────────────────────────────
+      const toast = document.getElementById('toast');
+      let toastTimer = null;
+
+      function showToast(html) {
+        toast.innerHTML = html;
+        toast.classList.add('toast--visible');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toast.classList.remove('toast--visible');
+        }, 4000);
+      }
+
+      // ── Modal ────────────────────────────────────────────────
+      const overlay = document.getElementById('modal-overlay');
+      const modal = document.getElementById('modal');
+      const closeBtn = document.getElementById('modal-close');
+      const platformEl = document.getElementById('modal-platform');
+      let lastFocused = null;
+
+      function openModal(platform) {
+        lastFocused = document.activeElement;
+        platformEl.textContent = platform;
+        overlay.classList.add('modal-overlay--open');
+        document.body.style.overflow = 'hidden';
+        overlay.querySelectorAll('[data-tier]').forEach(btn => {
+          btn.setAttribute('data-platform', platform);
+        });
+        setTimeout(() => closeBtn.focus(), 50);
+      }
+
+      function closeModal() {
+        overlay.classList.remove('modal-overlay--open');
+        document.body.style.overflow = '';
+        if (lastFocused && lastFocused.focus) lastFocused.focus();
+      }
+
+      document.querySelectorAll('[data-platform]:not([data-tier])').forEach(btn => {
+        btn.addEventListener('click', () => {
+          openModal(btn.getAttribute('data-platform'));
+        });
+      });
+
+      closeBtn.addEventListener('click', closeModal);
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeModal();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && overlay.classList.contains('modal-overlay--open')) {
+          closeModal();
+        }
+        if (e.key === 'Tab' && overlay.classList.contains('modal-overlay--open')) {
+          const focusable = overlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+          if (focusable.length === 0) return;
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      });
+
+      // ── Tier buttons (placeholder) ───────────────────────────
+      // Checkout isn't wired yet. We close the modal and show an
+      // honest toast so the visitor knows nothing was charged.
+      overlay.querySelectorAll('[data-tier]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tier = btn.getAttribute('data-tier');
+          closeModal();
+          const tierLabels = {
+            demo: 'the demo',
+            monthly: 'the €15 monthly plan',
+            onetime: 'the €100 lifetime plan',
+          };
+          const label = tierLabels[tier] || 'this plan';
+          showToast(
+            `<span class="toast__strong">Checkout isn't live yet.</span> ` +
+            `We're still finishing the engine — ${label} will be available once it's stable.`
+          );
+        });
+      });
+    })();
+  </script>
+
+</body>
+</html>

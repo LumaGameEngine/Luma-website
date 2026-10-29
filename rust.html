@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Luma Engine Rust — Experimental Edition</title>
+  <meta name="description" content="The Rust edition of Luma Engine: a modular DL-ARA workspace with self-contained math, deterministic software rasterization, BVH ray tracing, a real-time path tracer, and a native launcher.">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ═══════════════════════════════════════════════════════════
+       Sakura Dark — Rust Edition (Sakura Violet)
+       ═══════════════════════════════════════════════════════════ */
+    :root {
+      --void:        #090710;
+      --deep-plum:   #120D1C;
+      --sakura-dark: #211226;
+      --sakura-pink: #FF83C5;
+      --bloom:       #FFA9D7;
+      --wisteria:    #B9A0FF;
+      --frost:       #F4F0FA;
+      --moonlight:   #B7AEC7;
+      --border:      #33233D;
+      --green:       #6EE7A8;
+
+      /* Rust Edition accents — sakura violet */
+      --edition-accent:    #D6A5FF;
+      --edition-highlight: #FF8ED2;
+      --edition-glow:      rgba(190, 105, 255, 0.20);
+
+      --font-heading: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+      --font-body:    'Inter', 'Plus Jakarta Sans', sans-serif;
+      --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    html, body { margin: 0; padding: 0; }
+
+    body {
+      background: var(--void);
+      color: var(--frost);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background-color: var(--void);
+      background-image: url('bkg.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .bg-video {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.5;
+      filter: saturate(0.85) brightness(0.8) hue-rotate(-10deg);
+    }
+
+    .bg-vignette {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 30% 40%, rgba(9, 7, 16, 0.3) 0%, rgba(9, 7, 16, 0.75) 60%, rgba(9, 7, 16, 0.92) 100%),
+        linear-gradient(90deg, rgba(9, 7, 16, 0.95) 0%, rgba(9, 7, 16, 0.72) 42%, rgba(9, 7, 16, 0.25) 100%);
+    }
+
+    .bg-pause {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 100;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(18, 13, 28, 0.75);
+      border: 1px solid var(--border);
+      color: var(--moonlight);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.2s var(--ease-out);
+    }
+    .bg-pause:hover {
+      color: var(--edition-accent);
+      border-color: var(--edition-accent);
+      transform: scale(1.05);
+    }
+
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--void); }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 5px;
+      border: 2px solid var(--void);
+    }
+
+    /* ── NAV ──────────────────────────────────────────────────── */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 50;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(9, 7, 16, 0.55);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(51, 35, 61, 0.4);
+    }
+
+    .nav__brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--frost); }
+    .nav__logo {
+      width: 32px; height: 32px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--edition-accent), var(--edition-highlight));
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-heading); font-weight: 700; font-size: 14px;
+      color: #1a0f1e; box-shadow: 0 0 20px var(--edition-glow);
+    }
+    .nav__title { font-family: var(--font-heading); font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+
+    .nav__links { display: none; gap: 24px; font-size: 14px; }
+    .nav__link {
+      color: var(--moonlight); text-decoration: none;
+      transition: color 0.2s var(--ease-out);
+    }
+    .nav__link:hover { color: var(--frost); }
+
+    @media (min-width: 900px) {
+      .nav__links { display: flex; }
+    }
+
+    /* ── SWITCHER ─────────────────────────────────────────────── */
+    .switcher {
+      position: fixed;
+      top: 61px; left: 0; right: 0;
+      z-index: 49;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: rgba(9, 7, 16, 0.65);
+      border-bottom: 1px solid rgba(51, 35, 61, 0.4);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .switcher__edition {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(18, 13, 28, 0.5);
+      color: var(--moonlight);
+      text-decoration: none;
+      font-family: var(--font-body);
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .switcher__edition:hover {
+      border-color: var(--border);
+      background: rgba(18, 13, 28, 0.8);
+      color: var(--frost);
+    }
+
+    .switcher__edition--active {
+      border-color: var(--edition-accent);
+      background: var(--edition-glow);
+    }
+
+    .switcher__mark { font-size: 11px; opacity: 0.7; }
+    .switcher__edition--active .switcher__mark { color: var(--edition-accent); opacity: 1; }
+
+    .switcher__label {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.25;
+    }
+    .switcher__label strong { font-size: 13px; font-weight: 600; color: var(--frost); }
+    .switcher__label small { font-size: 10px; color: var(--moonlight); letter-spacing: 0.02em; }
+
+    /* ── PAGE ─────────────────────────────────────────────────── */
+    .page {
+      position: relative;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── HERO ─────────────────────────────────────────────────── */
+    .hero {
+      padding: 200px 0 96px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      min-height: 70vh;
+      justify-content: center;
+    }
+
+    .hero__eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--edition-accent);
+      background: var(--edition-glow);
+      border: 1px solid rgba(190, 105, 255, 0.25);
+      padding: 6px 14px;
+      border-radius: 999px;
+      margin-bottom: 28px;
+    }
+
+    .hero__eyebrow__dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px rgba(110, 231, 168, 0.6);
+    }
+
+    .hero__title {
+      font-family: var(--font-heading);
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+      color: var(--frost);
+      margin: 0 0 24px;
+      max-width: 800px;
+    }
+
+    .hero__title em {
+      font-style: normal;
+      color: var(--edition-accent);
+    }
+
+    .hero__lede {
+      font-size: 1.125rem;
+      color: var(--moonlight);
+      max-width: 640px;
+      margin: 0 0 40px;
+      line-height: 1.6;
+    }
+
+    .hero__actions { display: flex; flex-direction: column; gap: 12px; }
+    @media (min-width: 640px) { .hero__actions { flex-direction: row; } }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s var(--ease-out);
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .btn--primary {
+      background: linear-gradient(135deg, var(--edition-accent), var(--edition-highlight));
+      color: #1a0f1e;
+      box-shadow: 0 0 32px var(--edition-glow);
+    }
+    .btn--primary:hover { transform: translateY(-2px); }
+
+    .btn--ghost {
+      background: rgba(18, 13, 28, 0.75);
+      border-color: var(--border);
+      color: var(--frost);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .btn--ghost:hover { border-color: var(--edition-accent); color: var(--edition-accent); }
+
+    /* ── SECTIONS ─────────────────────────────────────────────── */
+    section { padding: 96px 0; }
+
+    .section-header { margin-bottom: 56px; max-width: 640px; }
+
+    .section-eyebrow {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--edition-accent);
+      background: var(--edition-glow);
+      border: 1px solid rgba(190, 105, 255, 0.25);
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-family: var(--font-heading);
+      font-size: clamp(1.875rem, 4vw, 2.75rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      font-weight: 700;
+      color: var(--frost);
+      margin: 0 0 16px;
+    }
+
+    .section-title em { font-style: normal; color: var(--edition-accent); }
+
+    .section-lede {
+      color: var(--moonlight);
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    /* ── STATUS BAR ───────────────────────────────────────────── */
+    .status {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 20px 24px;
+      background: rgba(18, 13, 28, 0.55);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .status__item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--moonlight);
+    }
+
+    .status__dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px rgba(110, 231, 168, 0.5);
+    }
+    .status__dot--dev {
+      background: var(--edition-accent);
+      box-shadow: 0 0 6px var(--edition-glow);
+    }
+
+    /* ── ARCHITECTURE ─────────────────────────────────────────── */
+    .arch {
+      background: rgba(9, 7, 16, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .arch__header {
+      padding: 12px 18px;
+      background: rgba(18, 13, 28, 0.6);
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--moonlight);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .arch__body {
+      padding: 20px 24px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.85;
+      color: var(--moonlight);
+      overflow-x: auto;
+    }
+
+    .arch__body p { margin: 0; }
+    .arch__body .top { color: var(--edition-accent); font-weight: 600; }
+    .arch__body .layer { color: var(--edition-highlight); }
+    .arch__body .leaf { color: var(--bloom); }
+    .arch__body .dim { color: rgba(183, 174, 199, 0.5); }
+    .arch__body .in-progress { color: var(--edition-accent); font-style: italic; }
+
+    /* ── CRATE GRID ───────────────────────────────────────────── */
+    .grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+    @media (min-width: 640px) { .grid { grid-template-columns: 1fr 1fr; } }
+    @media (min-width: 1024px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+
+    .card {
+      padding: 28px 24px;
+      background: rgba(18, 13, 28, 0.55);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .card:hover {
+      border-color: rgba(190, 105, 255, 0.35);
+      transform: translateY(-2px);
+    }
+
+    .card__icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--edition-glow);
+      border: 1px solid rgba(190, 105, 255, 0.2);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--edition-accent); font-size: 16px;
+      margin-bottom: 16px;
+    }
+
+    .card__title {
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--frost);
+      margin: 0 0 4px;
+    }
+
+    .card__pkg {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--edition-accent);
+      margin: 0 0 12px;
+      letter-spacing: 0.02em;
+    }
+
+    .card__desc {
+      font-size: 0.9rem;
+      color: var(--moonlight);
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    .card__status {
+      display: inline-block;
+      margin-top: 12px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .card__status--stable { color: var(--green); background: rgba(110, 231, 168, 0.08); }
+    .card__status--alpha  { color: var(--edition-accent); background: var(--edition-glow); }
+    .card__status--research { color: var(--moonlight); background: rgba(183, 174, 199, 0.08); }
+
+    /* ── SPLIT ────────────────────────────────────────────────── */
+    .split {
+      display: grid;
+      gap: 48px;
+      align-items: start;
+    }
+    @media (min-width: 900px) { .split { grid-template-columns: 1fr 1fr; } }
+
+    .prose p {
+      color: var(--moonlight);
+      font-size: 0.94rem;
+      line-height: 1.75;
+      margin: 0 0 16px;
+    }
+
+    .prose strong { color: var(--frost); font-weight: 600; }
+
+    .prose code {
+      font-family: var(--font-mono);
+      font-size: 0.86em;
+      color: var(--edition-highlight);
+      background: rgba(255, 142, 210, 0.06);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    /* ── NOTICE ───────────────────────────────────────────────── */
+    .notice {
+      padding: 20px 24px;
+      background: rgba(190, 105, 255, 0.04);
+      border-left: 2px solid var(--edition-accent);
+      border-radius: 0 8px 8px 0;
+      margin: 32px 0;
+    }
+
+    .notice__title {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--edition-accent);
+      margin: 0 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .notice p {
+      font-size: 0.9rem;
+      color: var(--moonlight);
+      margin: 0;
+      line-height: 1.65;
+    }
+
+    /* ── FINAL CTA ────────────────────────────────────────────── */
+    .final-cta {
+      text-align: center;
+      padding: 96px 24px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .final-cta__title {
+      font-family: var(--font-heading);
+      font-size: clamp(2rem, 5vw, 3rem);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      font-weight: 700;
+      color: var(--frost);
+      margin: 0 0 20px;
+    }
+
+    .final-cta__title em { font-style: normal; color: var(--edition-accent); }
+
+    .final-cta__lede {
+      color: var(--moonlight);
+      font-size: 1.0625rem;
+      margin: 0 0 32px;
+    }
+
+    .final-cta__actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      justify-content: center;
+    }
+    @media (min-width: 640px) { .final-cta__actions { flex-direction: row; } }
+
+    /* ── FOOTER ───────────────────────────────────────────────── */
+    footer {
+      padding: 48px 24px;
+      border-top: 1px solid var(--border);
+      background: rgba(9, 7, 16, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .footer__inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    @media (min-width: 768px) {
+      .footer__inner { flex-direction: row; justify-content: space-between; }
+    }
+
+    .footer__brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--font-heading);
+      font-weight: 600;
+      color: var(--frost);
+    }
+
+    .footer__meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--moonlight);
+      letter-spacing: 0.04em;
+      text-align: center;
+    }
+
+    .footer__links { display: flex; gap: 20px; font-size: 13px; }
+    .footer__links a {
+      color: var(--moonlight); text-decoration: none;
+      transition: color 0.2s var(--ease-out);
+    }
+    .footer__links a:hover { color: var(--edition-accent); }
+
+    @media (max-width: 640px) {
+      .hero { padding: 180px 0 64px; }
+      .switcher__label small { display: none; }
+      .bg-pause { bottom: 16px; right: 16px; }
+    }
+  </style>
+</head>
+<body data-engine-edition="rust">
+
+  <div class="bg-layer"></div>
+  <video class="bg-video" id="bg-video" autoplay muted loop playsinline preload="auto">
+    <source src="bkg.mp4" type="video/mp4">
+  </video>
+  <div class="bg-vignette"></div>
+
+  <button class="bg-pause" id="bg-pause" aria-label="Pause background video">
+    <i class="fas fa-pause" id="bg-pause-icon"></i>
+  </button>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="index.html" class="nav__brand">
+      <div class="nav__logo">L</div>
+      <span class="nav__title">Luma Engine</span>
+    </a>
+    <div class="nav__links">
+      <a href="#overview" class="nav__link">Overview</a>
+      <a href="#crates" class="nav__link">Crates</a>
+      <a href="#architecture" class="nav__link">Architecture</a>
+      <a href="docs-rust.html" class="nav__link">Docs</a>
+      <a href="download_rust.html" class="nav__link">Download</a>
+      <a href="changelog.html" class="nav__link">Changelog</a>
+    </div>
+  </nav>
+
+  <!-- SWITCHER -->
+  <nav class="switcher" aria-label="Choose an engine edition">
+    <a href="cpp.html" class="switcher__edition">
+      <span class="switcher__mark">◇</span>
+      <span class="switcher__label">
+        <strong>Luma Engine C++</strong>
+        <small>Classic edition</small>
+      </span>
+    </a>
+    <a href="rust.html" class="switcher__edition switcher__edition--active" aria-current="page">
+      <span class="switcher__mark">◈</span>
+      <span class="switcher__label">
+        <strong>Luma Engine Rust</strong>
+        <small>Rust edition</small>
+      </span>
+    </a>
+  </nav>
+
+  <main class="page">
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero__eyebrow">
+        <span class="hero__eyebrow__dot"></span>
+        Rust Edition · DL-ARA · Active development
+      </div>
+      <h1 class="hero__title">
+        Modular by design.<br>
+        <em>Fast by default.</em>
+      </h1>
+      <p class="hero__lede">
+        A modular Rust workspace exploring modern rendering architecture. Built around DL-ARA: self-contained math, deterministic software rasterization, BVH ray tracing, a real-time path tracer, and a native launcher.
+      </p>
+      <div class="hero__actions">
+        <a href="download_rust.html" class="btn btn--primary">
+          <i class="fas fa-download"></i> Download Rust edition
+        </a>
+        <a href="docs-rust.html" class="btn btn--ghost">
+          <i class="fas fa-book"></i> Read documentation
+        </a>
+      </div>
+    </section>
+
+    <!-- OVERVIEW -->
+    <section id="overview">
+      <div class="section-header">
+        <span class="section-eyebrow">Overview</span>
+        <h2 class="section-title">A workspace, <em>not a monolith.</em></h2>
+        <p class="section-lede">
+          The Rust edition is built as a set of focused crates. Each crate has a single responsibility, its own tests, and a documented public API. The workspace is designed so that new rendering techniques can be added without destabilising the ones that already work.
+        </p>
+      </div>
+
+      <div class="status">
+        <div class="status__item"><span class="status__dot"></span> dl-math foundation</div>
+        <div class="status__item"><span class="status__dot"></span> Rasterization (serial + tiled + parallel)</div>
+        <div class="status__item"><span class="status__dot"></span> BVH ray tracing</div>
+        <div class="status__item"><span class="status__dot status__dot--dev"></span> Path tracer (in progress)</div>
+        <div class="status__item"><span class="status__dot status__dot--dev"></span> Render graph (in progress)</div>
+        <div class="status__item"><span class="status__dot"></span> Launcher</div>
+      </div>
+    </section>
+
+    <!-- CRATES -->
+    <section id="crates">
+      <div class="section-header">
+        <span class="section-eyebrow">Crates</span>
+        <h2 class="section-title">What DL-ARA <em>ships today.</em></h2>
+        <p class="section-lede">
+          Every crate below is real. Each one has tests that pass. Statuses reflect where each crate currently sits, honestly.
+        </p>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="card__icon"><i class="fas fa-square-root-variable"></i></div>
+          <h3 class="card__title">Math foundation</h3>
+          <p class="card__pkg">dl-math</p>
+          <p class="card__desc">
+            Vectors, matrices, quaternions, colors, fixed-point, geometry, noise, and fast math approximations. No SIMD, no `unsafe`, `f32`-only, documented conventions.
+          </p>
+          <span class="card__status card__status--stable">Stable</span>
+        </div>
+
+        <div class="card">
+          <div class="card__icon"><i class="fas fa-cubes"></i></div>
+          <h3 class="card__title">Software rasterization</h3>
+          <p class="card__pkg">dl-rasterization</p>
+          <p class="card__desc">
+            Watertight edge equations, top-left fill rule, subpixel precision, depth buffer, serial / tiled / parallel rasterizers. Tiled and parallel outputs are bit-identical to serial.
+          </p>
+          <span class="card__status card__status--stable">Stable</span>
+        </div>
+
+        <div class="card">
+          <div class="card__icon"><i class="fas fa-project-diagram"></i></div>
+          <h3 class="card__title">Ray tracing foundation</h3>
+          <p class="card__pkg">dl-ray</p>
+          <p class="card__desc">
+            Watertight Möller–Trumbore triangle intersection, analytic primitives, binned SAH BVH build, iterative traversal, refit for dynamic meshes.
+          </p>
+          <span class="card__status card__status--stable">Stable</span>
+        </div>
+
+        <div class="card">
+          <div class="card__icon"><i class="fas fa-sun"></i></div>
+          <h3 class="card__title">Real-time path tracer</h3>
+          <p class="card__pkg">dl-ray-tracing</p>
+          <p class="card__desc">
+            PCG32 with per-pixel-per-frame seeding, cosine / GGX sampling with PDF tests, NEE with power-heuristic MIS, Russian roulette, temporal accumulation, à-trous denoiser.
+          </p>
+          <span class="card__status card__status--alpha">Alpha</span>
+        </div>
+
+        <div class="card">
+          <div class="card__icon"><i class="fas fa-network-wired"></i></div>
+          <h3 class="card__title">Render graph</h3>
+          <p class="card__pkg">dl-rendergraph, dl-render-graph-compile</p>
+          <p class="card__desc">
+            Target pool, typed handles, RAW/WAR/WAW dependency extraction, cycle detection, stable topological sort. The neon grid renderer consumes it.
+          </p>
+          <span class="card__status card__status--alpha">Alpha</span>
+        </div>
+
+        <div class="card">
+          <div class="card__icon"><i class="fas fa-gamepad"></i></div>
+          <h3 class="card__title">Input and camera</h3>
+          <p class="card__pkg">dl-input, dl-render-camera</p>
+          <p class="card__desc">
+            Unified gamepad layout (Xbox / PlayStation / Nintendo), WASD and arrow-key bindings, radial deadzones, `f64` camera at any world coordinate, six-plane frustum culling.
+          </p>
+          <span class="card__status card__status--stable">Stable</span>
+        </div>
+
+        <div class="card">
+          <div class="card__icon"><i class="fas fa-rocket"></i></div>
+          <h3 class="card__title">Launcher</h3>
+          <p class="card__pkg">luma_launcher</p>
+          <p class="card__desc">
+            GitHub Releases check, background download, SHA256 verification, rename-away swap, `chmod +x` on Unix, native launcher UI in egui with a Sakura-pink theme.
+          </p>
+          <span class="card__status card__status--stable">Stable</span>
+        </div>
+
+        <div class="card">
+          <div class="card__icon"><i class="fas fa-flask"></i></div>
+          <h3 class="card__title">Research</h3>
+          <p class="card__pkg">BDPT · photon mapping · ReSTIR · volumetrics</p>
+          <p class="card__desc">
+            Not implemented yet. Each is a multi-month effort and will be added to the workspace only when its foundation and correctness tests are real, not before.
+          </p>
+          <span class="card__status card__status--research">Research</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ARCHITECTURE -->
+    <section id="architecture">
+      <div class="section-header">
+        <span class="section-eyebrow">Architecture</span>
+        <h2 class="section-title">Built from <em>the ground up.</em></h2>
+        <p class="section-lede">
+          The dependency graph is deliberately shallow. Every crate depends only on crates below it. This is what makes the workspace extensible without becoming fragile.
+        </p>
+      </div>
+
+      <div class="arch">
+        <div class="arch__header">
+          <i class="fas fa-sitemap" style="color:var(--edition-accent)"></i>
+          <span>DL-ARA — Crate dependency graph</span>
+        </div>
+        <div class="arch__body">
+          <p><span class="top">luma_launcher</span>                <span class="dim">// downloads + runs the editor</span></p>
+          <p>&nbsp;&nbsp;└── <span class="layer">dl-ray-tracing</span>         <span class="dim">// real-time path tracer</span></p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="leaf">dl-ray</span>            <span class="dim">// BVH + watertight Möller–Trumbore</span></p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;└── <span class="leaf">dl-math</span>        <span class="dim">// vec, mat, quat, color, noise</span></p>
+          <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── <span class="leaf">dl-math</span></p>
+          <p>&nbsp;</p>
+          <p><span class="top">dl-rendergraph</span>                <span class="dim">// neon grid renderer</span></p>
+          <p>&nbsp;&nbsp;├── <span class="layer">dl-render-graph-compile</span>   <span class="dim">// dependency resolution + topo sort</span></p>
+          <p>&nbsp;&nbsp;├── <span class="layer">dl-render-pass</span>            <span class="dim">// pass trait + context</span></p>
+          <p>&nbsp;&nbsp;└── <span class="leaf">dl-math</span></p>
+          <p>&nbsp;</p>
+          <p><span class="top">dl-rasterization</span>                <span class="dim">// software rasterizers</span></p>
+          <p>&nbsp;&nbsp;└── <span class="leaf">dl-math</span></p>
+          <p>&nbsp;</p>
+          <p><span class="top">dl-render-camera</span>               <span class="dim">// f64 camera at any scale</span></p>
+          <p>&nbsp;&nbsp;└── <span class="leaf">dl-math</span></p>
+          <p>&nbsp;</p>
+          <p><span class="top">dl-input</span>                       <span class="dim">// keyboard, mouse, gamepad</span></p>
+          <p>&nbsp;&nbsp;└── <span class="in-progress">(no dependencies)</span></p>
+          <p>&nbsp;</p>
+          <p><span class="top">dl-math</span>                        <span class="dim">// no dependencies</span></p>
+        </div>
+      </div>
+
+      <div class="notice">
+        <div class="notice__title">
+          <i class="fas fa-info-circle"></i>
+          Design principle
+        </div>
+        <p>
+          Every crate in DL-ARA is <code>#![forbid(unsafe_code)]</code> with zero external dependencies except for the launcher (which uses <code>ureq</code>, <code>sha2</code>, <code>flate2</code>, <code>tar</code>, <code>zip</code>, and <code>eframe</code>). Nothing in the foundation stack pulls in a graphics API, a web framework, or an async runtime.
+        </p>
+      </div>
+    </section>
+
+    <!-- PHILOSOPHY -->
+    <section>
+      <div class="split">
+        <div class="prose">
+          <span class="section-eyebrow">Philosophy</span>
+          <h2 class="section-title" style="margin-top:12px;">
+            Correctness first. <em>Performance measured.</em>
+          </h2>
+          <p>
+            Every algorithm in the Rust edition is written against a scalar reference first. Optimizations are introduced only when profiling shows they matter, and only after a determinism test proves the optimized path produces bit-identical output to the reference.
+          </p>
+          <p>
+            The tiled rasterizer is bit-identical to the serial one. The parallel rasterizer is bit-identical to the tiled one. The path tracer's PDF integration tests prove the sampling distributions are correct before any image is rendered.
+          </p>
+        </div>
+        <div class="prose">
+          <p>
+            <strong>No SIMD</strong> until the scalar path is proven. <strong>No `unsafe`</strong> anywhere in the foundation crates. <strong>No fake code</strong> — modules that would be stubs stay out of <code>lib.rs</code> until they contain real implementations.
+          </p>
+          <p>
+            The convention document (<code>CONVENTIONS.md</code>) in <code>dl-math</code> defines the coordinate system, matrix storage order, camera conventions, and clip-space depth range. Every crate above <code>dl-math</code> conforms to those conventions, which is why the pieces compose without silent bugs.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="final-cta">
+      <h2 class="final-cta__title">Ready to <em>explore?</em></h2>
+      <p class="final-cta__lede">
+        Download the Rust edition, or read the documentation to understand what ships today.
+      </p>
+      <div class="final-cta__actions">
+        <a href="download_rust.html" class="btn btn--primary">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <a href="docs-rust.html" class="btn btn--ghost">
+          <i class="fas fa-book"></i> Documentation
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="footer__inner">
+      <div class="footer__brand">
+        <div class="nav__logo">L</div>
+        <span>Luma Engine Rust</span>
+      </div>
+      <div class="footer__meta">
+        © 2026 Luma Games · Rust edition · Sakura violet
+      </div>
+      <div class="footer__links">
+        <a href="index.html">Home</a>
+        <a href="changelog.html">Changelog</a>
+        <a href="https://github.com/LumaGameEngine" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      const video = document.getElementById('bg-video');
+      const btn = document.getElementById('bg-pause');
+      const icon = document.getElementById('bg-pause-icon');
+      if (!video || !btn || !icon) return;
+
+      video.addEventListener('error', () => { btn.style.display = 'none'; });
+      const checkSrc = video.querySelector('source');
+      if (checkSrc) checkSrc.addEventListener('error', () => { btn.style.display = 'none'; });
+
+      btn.addEventListener('click', () => {
+        if (video.paused) {
+          video.play().catch(() => {});
+          icon.classList.replace('fa-play', 'fa-pause');
+        } else {
+          video.pause();
+          icon.classList.replace('fa-pause', 'fa-play');
+        }
+      });
+
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        video.pause();
+        icon.classList.replace('fa-pause', 'fa-play');
+      }
+    })();
+  </script>
+
+</body>
+</html>

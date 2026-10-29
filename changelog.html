@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Changelog — Luma Engine</title>
+  <meta name="description" content="Every change to Luma Engine and the DL-ARA Rust workspace. Kept honest: features that are still research-grade stay in the Not Implemented section until they ship.">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ═══════════════════════════════════════════════════════════
+       Sakura Dark — Changelog
+       Inline CSS. No external stylesheet.
+       ═══════════════════════════════════════════════════════════ */
+
+    :root {
+      --void:        #090710;
+      --deep-plum:   #120D1C;
+      --sakura-dark: #211226;
+      --sakura-pink: #FF83C5;
+      --bloom:       #FFA9D7;
+      --wisteria:    #B9A0FF;
+      --frost:       #F4F0FA;
+      --moonlight:   #B7AEC7;
+      --border:      #33233D;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+
+      --font-heading: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+      --font-body:    'Inter', 'Plus Jakarta Sans', sans-serif;
+      --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    html, body { margin: 0; padding: 0; }
+
+    body {
+      background: var(--void);
+      color: var(--frost);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* ── BACKGROUND LAYER ─────────────────────────────────────── */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background-color: var(--void);
+      background-image: url('bkg.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .bg-video {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.35;
+      filter: saturate(0.85) brightness(0.85);
+      mix-blend-mode: screen;
+    }
+
+    /* Vignette so video doesn't overwhelm content */
+    .bg-vignette {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 0%, transparent 0%, rgba(9, 7, 16, 0.55) 70%),
+        linear-gradient(180deg, rgba(9, 7, 16, 0.4) 0%, rgba(9, 7, 16, 0.7) 100%);
+    }
+
+    /* ── PAUSE BUTTON ─────────────────────────────────────────── */
+    .bg-pause {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 100;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(18, 13, 28, 0.75);
+      border: 1px solid var(--border);
+      color: var(--moonlight);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .bg-pause:hover {
+      color: var(--sakura-pink);
+      border-color: var(--sakura-pink);
+      transform: scale(1.05);
+    }
+
+    /* ── SCROLLBAR ─────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--void); }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 5px;
+      border: 2px solid var(--void);
+    }
+    ::-webkit-scrollbar-thumb:hover { background: var(--sakura-dark); }
+
+    /* ── TOP NAV (shared with other pages) ────────────────────── */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 50;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(9, 7, 16, 0.72);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(51, 35, 61, 0.4);
+    }
+
+    .nav__brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--frost);
+    }
+
+    .nav__logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--sakura-pink), var(--wisteria));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 14px;
+      color: #1a0f1e;
+      box-shadow: 0 0 20px rgba(255, 131, 197, 0.25);
+    }
+
+    .nav__title {
+      font-family: var(--font-heading);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .nav__links {
+      display: none;
+      gap: 28px;
+      font-size: 14px;
+    }
+
+    .nav__link {
+      color: var(--moonlight);
+      text-decoration: none;
+      position: relative;
+      transition: color 0.2s var(--ease-out);
+    }
+
+    .nav__link:hover { color: var(--frost); }
+
+    .nav__link--active {
+      color: var(--frost);
+    }
+
+    .nav__link--active::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      bottom: -6px;
+      height: 1px;
+      background: var(--sakura-pink);
+    }
+
+    @media (min-width: 768px) {
+      .nav__links { display: flex; }
+    }
+
+    /* ── PAGE LAYOUT ──────────────────────────────────────────── */
+    .page {
+      position: relative;
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 140px 24px 96px;
+    }
+
+    /* ── HERO ─────────────────────────────────────────────────── */
+    .hero {
+      padding-bottom: 48px;
+      margin-bottom: 56px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hero__eyebrow {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--sakura-pink);
+      background: rgba(255, 131, 197, 0.08);
+      border: 1px solid rgba(255, 131, 197, 0.15);
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 20px;
+    }
+
+    .hero__title {
+      font-family: var(--font-heading);
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      font-weight: 700;
+      color: var(--frost);
+      margin: 0 0 16px;
+    }
+
+    .hero__title em {
+      font-style: normal;
+      color: var(--sakura-pink);
+    }
+
+    .hero__lede {
+      font-size: 1.0625rem;
+      color: var(--moonlight);
+      max-width: 60ch;
+      margin: 0;
+    }
+
+    /* ── ENTRIES ──────────────────────────────────────────────── */
+    .entries {
+      display: flex;
+      flex-direction: column;
+      gap: 56px;
+    }
+
+    .entry {
+      position: relative;
+      padding-left: 32px;
+      border-left: 1px solid var(--border);
+    }
+
+    .entry::before {
+      content: '';
+      position: absolute;
+      left: -5px;
+      top: 8px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--void);
+      border: 2px solid var(--sakura-pink);
+    }
+
+    .entry--unreleased::before {
+      background: var(--sakura-pink);
+      box-shadow: 0 0 12px rgba(255, 131, 197, 0.4);
+    }
+
+    .entry__header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .entry__version {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--sakura-pink);
+      letter-spacing: 0.02em;
+    }
+
+    .entry__date {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--moonlight);
+    }
+
+    .entry__status {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--wisteria);
+      background: rgba(185, 160, 255, 0.08);
+      border: 1px solid rgba(185, 160, 255, 0.15);
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin-left: auto;
+    }
+
+    /* ── CRATE HEADERS ────────────────────────────────────────── */
+    .crate {
+      margin-top: 32px;
+      margin-bottom: 12px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--wisteria);
+      letter-spacing: 0.04em;
+    }
+
+    /* ── GROUPS ───────────────────────────────────────────────── */
+    .group {
+      margin-bottom: 32px;
+    }
+
+    .group__title {
+      font-family: var(--font-heading);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--frost);
+      margin: 0 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .group__title::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--moonlight);
+    }
+
+    .group--added   .group__title::before { background: #6EE7A8; }
+    .group--changed .group__title::before { background: var(--wisteria); }
+    .group--fixed   .group__title::before { background: var(--sakura-pink); }
+    .group--removed .group__title::before { background: #F87171; }
+
+    .list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .list li {
+      position: relative;
+      padding: 8px 0 8px 24px;
+      color: var(--moonlight);
+      border-bottom: 1px solid rgba(51, 35, 61, 0.4);
+    }
+
+    .list li:last-child { border-bottom: none; }
+
+    .list li::before {
+      content: '›';
+      position: absolute;
+      left: 0;
+      color: var(--sakura-pink);
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    .list code {
+      font-family: var(--font-mono);
+      font-size: 0.88em;
+      color: var(--bloom);
+      background: rgba(255, 169, 215, 0.06);
+      padding: 1px 6px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* ── NOTICE BOX (not implemented / limitations) ───────────── */
+    .notice {
+      margin: 24px 0;
+      padding: 20px 24px;
+      background: rgba(255, 131, 197, 0.04);
+      border-left: 2px solid var(--sakura-pink);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    }
+
+    .notice__title {
+      font-family: var(--font-heading);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--sakura-pink);
+      margin: 0 0 10px;
+    }
+
+    .notice p {
+      margin: 0;
+      color: var(--moonlight);
+      font-size: 0.94em;
+    }
+
+    .notice p + p { margin-top: 10px; }
+
+    /* ── BACK TO TOP ──────────────────────────────────────────── */
+    .top-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 56px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--moonlight);
+      text-decoration: none;
+      transition: color 0.2s var(--ease-out);
+    }
+
+    .top-link:hover { color: var(--sakura-pink); }
+
+    /* ── RESPONSIVE ───────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .page { padding: 120px 16px 64px; }
+      .entry { padding-left: 24px; }
+      .entry__status { margin-left: 0; }
+      .bg-pause { top: 76px; right: 16px; }
+    }
+  </style>
+</head>
+<body id="top">
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- BACKGROUND LAYER — assets live at repo root               -->
+  <!--   bkg.png : static background image (required)            -->
+  <!--   bkg.mp4 : animated sakura video (optional)              -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div class="bg-layer"></div>
+  <video class="bg-video" id="bg-video" autoplay muted loop playsinline preload="auto">
+    <source src="bkg.mp4" type="video/mp4">
+  </video>
+  <div class="bg-vignette"></div>
+
+  <!-- Pause / play button -->
+  <button class="bg-pause" id="bg-pause" aria-label="Pause background video">
+    <i class="fas fa-pause" id="bg-pause-icon"></i>
+  </button>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="index.html" class="nav__brand">
+      <div class="nav__logo">L</div>
+      <span class="nav__title">Luma Engine</span>
+    </a>
+    <div class="nav__links">
+      <a href="index.html#editions" class="nav__link">Editions</a>
+      <a href="index.html#technology" class="nav__link">Technology</a>
+      <a href="docs.html" class="nav__link">Docs</a>
+      <a href="download-cpp.html" class="nav__link">C++ Download</a>
+      <a href="changelog.html" class="nav__link nav__link--active">Changelog</a>
+    </div>
+  </nav>
+
+  <main class="page">
+
+    <header class="hero">
+      <span class="hero__eyebrow">Changelog</span>
+      <h1 class="hero__title">What changed in <em>Luma Engine</em>.</h1>
+      <p class="hero__lede">
+        Every notable change to the engine, the DL-ARA Rust workspace, and the launcher.
+        Kept honest: features that are still research-grade stay in the
+        <em>Not Implemented</em> section until they ship.
+      </p>
+    </header>
+
+    <section class="entries">
+
+      <article class="entry entry--unreleased">
+        <div class="entry__header">
+          <span class="entry__version">unreleased</span>
+          <span class="entry__date">current working tree</span>
+          <span class="entry__status">In Progress</span>
+        </div>
+
+        <p style="color: var(--moonlight); margin: 0 0 24px;">
+          Everything in this entry is in the working tree but has not been tagged
+          as a release. When the workspace is tagged <code>v0.1.0</code>, this block
+          will be renamed and a new empty <code>unreleased</code> block will be added
+          above it.
+        </p>
+
+        <h3 class="crate">dl-math</h3>
+
+        <div class="group group--added">
+          <h4 class="group__title">Added</h4>
+          <ul class="list">
+            <li>Full scalar math foundation (<code>MathConstants</code>, <code>clamp</code>, <code>lerp</code>, <code>smoothstep</code>, waves, <code>approx_eq</code>, <code>move_towards</code>, <code>approach</code>).</li>
+            <li><code>bits</code>: <code>next_power_of_two</code>, <code>is_power_of_two</code>, <code>bit_reverse_u32</code>, <code>byte_swap_*</code>, <code>splitmix64_finalize</code>, <code>hash_2d</code>.</li>
+            <li><code>angle</code>: <code>wrap_positive</code>, <code>wrap_signed</code>, <code>difference</code>, <code>lerp</code>, <code>move_towards</code>.</li>
+            <li><code>random</code>: split-mix deterministic RNG, thread-local RNG.</li>
+            <li><code>fastmath</code>: <code>fast_exp</code>, <code>fast_log</code>, <code>fast_pow</code>, <code>fast_inv_sqrt</code>, <code>fast_sin</code>, <code>fast_cos</code>. Each documented with valid input range, measured error, and whether the standard library version is faster.</li>
+            <li><code>vector</code>: plain <code>#[repr(C)]</code> structs, no SIMD. <code>Vec2</code> = 8 bytes, <code>Vec3</code> = 12, <code>Vec4</code> = 16. Hand-written reverse scalar multiply impls. Bit-identical <code>Hash</code> impls.</li>
+            <li><code>color</code>: HSV, luminance, ACES / Reinhard / Filmic / Uncharted 2 tonemapping, gamma, effects, blend modes, RGB565 / ARGB1555 / RGBA1010102 / RGBE / half-float packing.</li>
+            <li><code>matrix</code>: <code>Mat4</code> in column-major flat <code>[f32; 16]</code>. <code>perspective</code> and <code>orthographic</code> use <code>[0, 1]</code> clip depth. <code>inverse</code> and <code>look_at</code> return <code>Option</code>.</li>
+            <li><code>quaternion</code>: Hamilton multiplication, <code>from_axis_angle</code>, <code>from_euler</code>, <code>slerp</code> (handles antipodal), <code>rotate</code>, <code>to_mat4</code>.</li>
+            <li><code>geometry</code>: <code>Aabb</code>, <code>Ray</code>, <code>Plane</code>, <code>Frustum</code>, <code>Rect</code>, <code>Viewport</code>. <code>is_point_in_triangle</code> fixed (inclusive boundary).</li>
+            <li><code>fixed</code>: <code>Fixed&lt;IntType, FRACTIONAL_BITS&gt;</code>. <code>sqrt</code> uses bit-by-bit <code>isqrt</code>. <code>From&lt;f32&gt;</code> saturates; <code>try_from_f64</code> returns <code>Option</code>.</li>
+            <li><code>noise</code>: <code>perlin_2d</code>, <code>value_noise_2d</code>, <code>simplex_2d</code>, <code>fbm_2d</code>, <code>ridged_noise_2d</code>. Bit-identical to the C++.</li>
+            <li><code>CONVENTIONS.md</code>: right-handed, column-major, column-vectors, −Z forward, <code>[0, 1]</code> clip depth, radians.</li>
+          </ul>
+        </div>
+
+        <h3 class="crate">dl-rendergraph</h3>
+
+        <div class="group group--added">
+          <h4 class="group__title">Added</h4>
+          <ul class="list">
+            <li><code>Image</code> (RGBA8, row-major, top-left origin).</li>
+            <li><code>RenderGraph</code> with target registry, pass list, execution loop, <code>Presenter</code> trait.</li>
+            <li><code>GridPass</code>: infinite neon grid, evaluated analytically per pixel. <strong>Ray-plane intersection in <code>f64</code></strong>, world-space distance-to-line with pixel-footprint floor, smoothstep AA, distance fade.</li>
+          </ul>
+        </div>
+
+        <h3 class="crate">dl-render-pass</h3>
+
+        <div class="group group--added">
+          <h4 class="group__title">Added</h4>
+          <ul class="list">
+            <li><code>RenderPass</code>, <code>PassDescriptor</code>, <code>PassType</code>, <code>PassContext</code>, <code>ResourceAccess</code>, <code>ResourceType</code>, <code>AccessMode</code>, <code>PassError</code>.</li>
+          </ul>
+        </div>
+
+        <h3 class="crate">dl-render-camera</h3>
+
+        <div class="group group--added">
+          <h4 class="group__title">Added</h4>
+          <ul class="list">
+            <li><code>Viewport</code>, <code>Projection</code> (perspective + orthographic, <code>[0, 1]</code> depth).</li>
+            <li><code>ViewMatrix::look_at</code> in <code>f64</code> (downcast to <code>f32</code>).</li>
+            <li><code>Frustum</code> six-plane extraction (Gribb-Hartmann, <code>[0, 1]</code> adapted).</li>
+          </ul>
+        </div>
+
+        <h3 class="crate">dl-input</h3>
+
+        <div class="group group--added">
+          <h4 class="group__title">Added</h4>
+          <ul class="list">
+            <li><code>Key</code>, <code>MouseButton</code> (Left, Right, Middle, X1, X2, X3, X4), <code>MouseAxis</code>, <code>GamepadButton</code>, <code>GamepadAxis</code>, <code>ControllerType</code> (Xbox, PlayStation, Nintendo).</li>
+            <li><code>GamepadButton::from_platform(controller, physical_face)</code>.</li>
+            <li><code>InputEvent</code>, <code>InputBinding</code> with scale / inverted / deadzone.</li>
+            <li><code>InputAction</code> with radial deadzone (rescale), vector2 clamping.</li>
+            <li><code>ActionMap</code> with WASD and arrow-key helpers.</li>
+          </ul>
+        </div>
+
+        <h3 class="crate">dl-render-graph-compile</h3>
+
+        <div class="group group--added">
+          <h4 class="group__title">Added</h4>
+          <ul class="list">
+            <li>RAW / WAR / WAW edge extraction.</li>
+            <li>Kahn's cycle detection returning the set of passes in the cycle.</li>
+            <li>Stable topological sort.</li>
+            <li>Validation, <code>CompiledGraph</code>, <code>PassRunner</code> dispatch.</li>
+          </ul>
+        </div>
+
+        <h3 class="crate">dl-rasterization</h3>
+
+        <div class="group group--added">
+          <h4 class="group__title">Added</h4>
+          <ul class="list">
+            <li><code>SubpixelCoord</code> (8 fractional bits, <code>1 pixel = 256 units</code>).</li>
+            <li>Watertight <code>EdgeEquations</code> with incremental <code>step_x</code> / <code>step_y</code>, top-left fill rule.</li>
+            <li><code>DepthBuffer</code> with standard and reversed Z.</li>
+            <li><code>SerialRasterizer</code> and <code>TiledRasterizer</code>. <code>tiled_matches_serial_coverage</code> test proves bit-identical output.</li>
+            <li><code>TileScheduler</code> — deterministic multithreaded dispatch. <code>parallel_matches_serial</code> test proves bit-identical output.</li>
+            <li><code>criterion</code> benchmark comparing serial, tiled, and parallel.</li>
+          </ul>
+        </div>
+
+        <h3 class="crate">dl-ray</h3>
+
+        <div class="group group--added">
+          <h4 class="group__title">Added</h4>
+          <ul class="list">
+            <li><code>Ray</code> with precomputed <code>inv_direction</code>.</li>
+            <li><code>Hit</code> with <code>front_face</code> and <code>prim_id</code> for O(1) material lookup.</li>
+            <li><strong>Watertight Möller–Trumbore</strong> ray-triangle intersection.</li>
+            <li>Analytic primitives: <code>Plane</code>, <code>Sphere</code>, <code>Disk</code>, <code>Cylinder</code>, <code>Cone</code>.</li>
+            <li><code>Transform</code> with precomputed inverse and inverse-transpose.</li>
+            <li><strong>Binned SAH BVH</strong>: build, iterative traversal with explicit stack, <code>refit</code> for dynamic meshes.</li>
+            <li><code>Scene</code> with automatic <code>Acceleration::{None, Bvh}</code> selection.</li>
+          </ul>
+        </div>
+
+        <h3 class="crate">dl-ray-tracing</h3>
+
+        <div class="group group--added">
+          <h4 class="group__title">Added</h4>
+          <ul class="list">
+            <li>Reference-correct <strong>PCG32</strong> with per-pixel-per-frame seeding for TAA. Reference test checks the paper's published sequence.</li>
+            <li>Sampling: hemisphere-uniform, cosine, sphere-uniform, GGX reflection. Each has a Monte Carlo PDF integration test.</li>
+            <li><code>Bsdf</code> trait, <code>Lambertian</code>, <code>Mirror</code>, <code>Dielectric</code> (verified ~4% reflectance at normal incidence into glass), <code>Emissive</code>.</li>
+            <li><code>PointLight</code>, <code>DirectionalLight</code>, <code>AreaLight</code> (uniform triangle sampling).</li>
+            <li>Path tracer with NEE, Russian roulette, <strong>power heuristic MIS</strong> on both sides.</li>
+            <li>Temporal accumulation, à-trous edge-aware denoiser driven by depth and normal.</li>
+            <li>ACES / Reinhard / Clamp tonemapping, sRGB encode, PPM writer.</li>
+            <li><code>render_realtime</code> — trace → temporal → denoise → tonemap → sRGB → u8 pipeline.</li>
+          </ul>
+        </div>
+
+        <h3 class="crate">luma_launcher</h3>
+
+        <div class="group group--added">
+          <h4 class="group__title">Added</h4>
+          <ul class="list">
+            <li><code>Updater</code> (GitHub Releases API, semver), <code>UpdateWorker</code> (background thread).</li>
+            <li><code>EngineLauncher</code> (rename-away swap aware, Unix process group), <code>LaunchManager</code> (SIGTERM → SIGKILL grace period).</li>
+            <li><code>ProjectScanner</code>, <code>ProjectCreator</code>, <code>Templates</code> (blank / 2D / 3D), <code>Persistence</code> (atomic state file), <code>LumaPaths</code>.</li>
+            <li>Sakura-pink UI shell with hero, sidebar, topbar, project cards, update bell, create-project flow.</li>
+            <li><strong>Background download pipeline</strong>: <code>DownloadWorker</code>, <code>EnginePaths</code>, <code>sha256_file</code>, <code>.tar.gz</code> / <code>.zip</code> extraction, <code>-old</code> rename swap, <code>chmod +x</code> on Unix.</li>
+          </ul>
+        </div>
+
+        <div class="group group--changed">
+          <h4 class="group__title">Changed</h4>
+          <ul class="list">
+            <li><code>Vec3</code> is <strong>12 bytes</strong>, not 16. The C++ <code>Vec3T</code> was 16 because of an <code>__m128</code> union member. Documented in <code>CONVENTIONS.md</code> §7.1.</li>
+            <li><code>perspective</code> / <code>orthographic</code> use <strong><code>[0, 1]</code> clip depth</strong>. Required by <code>wgpu</code>; documented in <code>CONVENTIONS.md</code> §5.</li>
+            <li><code>Mat4::inverse</code> and <code>look_at</code> return <code>Option</code> instead of producing identity or NaN.</li>
+            <li><code>Fixed::sqrt</code> uses bit-by-bit <code>isqrt</code>.</li>
+            <li><code>Palette::get</code> returns <code>Option&lt;&amp;Color&gt;</code>.</li>
+            <li><code>MouseButton</code> extended with X3 and X4. <code>GamepadButton</code> gains <code>ControllerType</code> and <code>from_platform</code>.</li>
+          </ul>
+        </div>
+
+        <div class="group group--fixed">
+          <h4 class="group__title">Fixed</h4>
+          <ul class="list">
+            <li><code>is_point_in_triangle</code> — the C++ applied <code>Sign()</code> to only the first term. Rust uses the standard three-half-plane test with an inclusive boundary.</li>
+            <li><code>is_power_of_two(0)</code> — the C++ returned 0 from <code>NextPowerOfTwo(0)</code>. Rust returns 1.</li>
+            <li><code>ReverseBits</code> — the C++ <code>DLMath::ReverseBits</code> actually called <code>__builtin_bswap32</code> (a byte swap, not a bit reversal). Rust provides both correctly.</li>
+            <li><code>Mat4</code> scalar multiply sign — the C++ had a transposed indexing pattern under one interpretation of the storage convention.</li>
+          </ul>
+        </div>
+
+        <div class="group group--removed">
+          <h4 class="group__title">Removed</h4>
+          <ul class="list">
+            <li>Empty module declarations removed from <code>dl-ray</code> (<code>path_tracing</code>, <code>materials</code>, <code>lights</code>, <code>denoising</code>, <code>temporal</code>, <code>shadows</code>, <code>reflections</code>, <code>ambient_occlusion</code>, <code>monte_carlo</code>, <code>sampling</code>, <code>simd</code>, <code>dispatch</code>, <code>parallel</code>, <code>ray_query</code>). These are real modules in <code>dl-ray-tracing</code> or <code>dl-rendergraph</code>.</li>
+          </ul>
+        </div>
+
+        <div class="notice">
+          <h4 class="notice__title">Not Implemented</h4>
+          <p>The following modules appear in the <code>dl-ray-tracing</code> file tree on disk but do <strong>not</strong> exist in <code>lib.rs</code> because they would be stubs. They will be added to <code>lib.rs</code> in the batch that gives them real code, not before.</p>
+          <p><code>bidirectional</code>, <code>photon_mapping</code>, <code>reservoir</code>, <code>volumetrics</code>, <code>spectral</code>, <code>subsurface_scattering</code>, <code>bssrdf</code>, <code>caustics</code>, <code>adaptive_sampling</code>, <code>simd</code>.</p>
+        </div>
+
+        <div class="notice">
+          <h4 class="notice__title">Known Limitations</h4>
+          <p>The real-time path tracer does not yet hit 60 / 45 / 30 fps at 720p / 1080p / 1440p on current hardware. The architecture is correct (1 spp, temporal, denoise, tile-parallel); tuning remains.</p>
+          <p><code>TemporalAccumulator</code> does not yet reproject for a moving camera. Stationary camera is correct.</p>
+        </div>
+      </article>
+
+    </section>
+
+    <a href="#top" class="top-link">
+      <i class="fas fa-arrow-up"></i> Back to top
+    </a>
+
+  </main>
+
+  <script>
+    (function () {
+      const video = document.getElementById('bg-video');
+      const btn = document.getElementById('bg-pause');
+      const icon = document.getElementById('bg-pause-icon');
+
+      if (!video || !btn || !icon) return;
+
+      // Hide the button if the video fails to load.
+      video.addEventListener('error', () => { btn.style.display = 'none'; });
+      const checkSrc = video.querySelector('source');
+      if (checkSrc) {
+        checkSrc.addEventListener('error', () => { btn.style.display = 'none'; });
+      }
+
+      btn.addEventListener('click', () => {
+        if (video.paused) {
+          video.play().catch(() => {});
+          icon.classList.remove('fa-play');
+          icon.classList.add('fa-pause');
+          btn.setAttribute('aria-label', 'Pause background video');
+        } else {
+          video.pause();
+          icon.classList.remove('fa-pause');
+          icon.classList.add('fa-play');
+          btn.setAttribute('aria-label', 'Play background video');
+        }
+      });
+
+      // Respect reduced-motion preference.
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        video.pause();
+        icon.classList.remove('fa-pause');
+        icon.classList.add('fa-play');
+      }
+    })();
+  </script>
+
+</body>
+</html>
